@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Caffine</title>
+    <meta name="description" content="A minimal, aesthetic study timer with XP tracking.">
+    <meta name="theme-color" content="#fffbeb">
+    <link rel="icon" type="image/png" href="logo.png">
+    
+    <style>
+        /* --- CSS VARIABLES & THEME SETUP --- */
+        :root {
+            /* Light Mode (Default) - Lighter amber and beige */
+            --bg-color: #fffbeb; /* Lighter amber beige */
+            --surface-color: #f59e0b; /* Amber 500 */
+            --text-primary: #000000; /* Black */
+            --text-secondary: #374151; /* Gray 700 */
+            --accent-color: #d97706; /* Amber 600 */
+            --danger-color: #dc2626; /* Red 600 */
+            --font-stack: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --safe-area-top: env(safe-area-inset-top);
+            --safe-area-bottom: env(safe-area-inset-bottom);
+            --shadow-card: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        [data-theme="dark"] {
+            /* Dark Mode - Amber and Black */
+            --bg-color: #000000; /* Pure Black */
+            --surface-color: #1a1a1a; /* Dark gray */
+            --text-primary: #d97706; /* Amber 600 */
+            --text-secondary: #f59e0b; /* Amber 500 */
+            --accent-color: #f59e0b; /* Amber 500 */
+            --shadow-card: 0 4px 20px rgba(217,119,6,0.2);
+        }
+
+        /* --- GLOBAL RESET & TYPOGRAPHY --- */
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+        
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: var(--font-stack);
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            transition: background-color 0.5s ease, color 0.5s ease;
+            overflow: hidden; 
+            position: fixed;
+        }
+
+        /* --- LAYOUT CONTAINER --- */
+        .app-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            padding: calc(20px + var(--safe-area-top)) 24px calc(40px + var(--safe-area-bottom));
+            position: relative;
+            z-index: 1;
+        }
+
+        /* --- HEADER --- */
+        header {
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 10px;
+        }
+
+        .logo {
+            font-weight: 600;
+            font-size: 1.1rem;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+            opacity: 0.8;
+        }
+
+        /* --- XP BADGE (Upper Right) --- */
+        .xp-badge {
+            background: var(--surface-color);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--accent-color);
+            box-shadow: var(--shadow-card);
+            cursor: pointer;
+            transition: transform 0.2s ease, opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .xp-badge:active { transform: scale(0.95); }
+
+        /* --- MAIN FOCUS AREA --- */
+        .focus-area {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+            width: 100%;
+        }
+
+        /* Responsive Huge Timer */
+        .timer-display {
+            font-size: 18vw; 
+            line-height: 1;
+            font-weight: 200; 
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.04em;
+            cursor: pointer;
+            transition: opacity 0.3s ease;
+            user-select: none;
+        }
+        
+        @media (min-width: 768px) {
+            .timer-display { font-size: 8rem; }
+        }
+
+        .timer-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            font-weight: 400;
+            margin-top: 1rem;
+            letter-spacing: 0.05em;
+            opacity: 0.6;
+            text-transform: uppercase;
+        }
+
+        /* Input mode for Timer */
+        .time-input-container {
+            display: none;
+            flex-direction: row;
+            align-items: center;
+            justify-content: center;
+            gap: 2vw;
+        }
+        .time-input-container.active { display: flex; }
+        
+        input[type="number"] {
+            background: transparent;
+            border: none;
+            border-bottom: 2px solid var(--accent-color);
+            color: var(--text-primary);
+            font-size: 12vw;
+            width: 25vw;
+            text-align: center;
+            font-family: inherit;
+            font-weight: 200;
+            outline: none;
+            border-radius: 0;
+            padding: 0;
+            margin: 0;
+        }
+        
+        @media (min-width: 768px) {
+            input[type="number"] { font-size: 5rem; width: 140px; }
+        }
+
+        /* --- CONTROLS --- */
+        .controls {
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 32px;
+            padding-bottom: 2vh;
+        }
+
+        .primary-controls {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        /* Buttons */
+        .btn {
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: var(--font-stack);
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .btn:active { transform: scale(0.92); }
+
+        .btn-main {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--text-primary);
+            color: var(--bg-color);
+            font-size: 1.5rem;
+            box-shadow: var(--shadow-card);
+        }
+
+        .btn-main svg { width: 32px; height: 32px; fill: currentColor; }
+
+        .btn-secondary {
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 12px;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            font-size: 0.9rem;
+            opacity: 0.6;
+        }
+        .btn-secondary:hover { opacity: 1; background: rgba(128,128,128,0.1); }
+
+        /* The Toggle Theme Button */
+        .theme-toggle {
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            opacity: 0.5;
+            padding: 8px;
+            color: var(--text-primary);
+        }
+        
+        /* --- HISTORY MODAL --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.4);
+            backdrop-filter: blur(4px);
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+            display: flex;
+            align-items: flex-end; 
+        }
+        
+        @media (min-width: 768px) {
+            .modal-overlay { align-items: center; justify-content: center; }
+        }
+
+        .modal-overlay.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal-card {
+            background: var(--surface-color);
+            width: 100%;
+            max-width: 500px;
+            height: 80vh;
+            border-top-left-radius: 24px;
+            border-top-right-radius: 24px;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: 0 -10px 40px rgba(0,0,0,0.1);
+        }
+
+        @media (min-width: 768px) {
+            .modal-card {
+                border-radius: 24px;
+                height: 600px;
+                transform: scale(0.95);
+                opacity: 0;
+            }
+        }
+
+        .modal-overlay.open .modal-card {
+            transform: translateY(0);
+        }
+        @media (min-width: 768px) {
+            .modal-overlay.open .modal-card {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title { font-weight: 600; font-size: 1.2rem; }
+        .modal-close { background: none; border: none; font-size: 1.5rem; color: var(--text-secondary); cursor: pointer; }
+
+        .history-list {
+            flex-grow: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            font-size: 0.9rem;
+        }
+        [data-theme="dark"] .history-item { border-bottom: 1px solid rgba(255,255,255,0.05); }
+        
+        .history-date { color: var(--text-secondary); }
+        .history-val { font-weight: 600; color: var(--accent-color); }
+
+        /* --- ANIMATIONS --- */
+        .breathing { animation: breathe 6s ease-in-out infinite; }
+        @keyframes breathe {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <!-- Header -->
+        <header>
+            <button class="theme-toggle" id="themeBtn" aria-label="Toggle Dark Mode">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            </button>
+            
+            <div class="xp-badge" id="xpBadge">
+                <span id="xpValue">...</span> XS
+            </div>
+        </header>
+
+        <!-- Main Focus Area -->
+        <div class="focus-area">
+            
+            <!-- Digital Timer -->
+            <div class="timer-display" id="timerDisplay">25:00</div>
+            
+            <!-- Time Input (Hidden by default) -->
+            <div class="time-input-container" id="timeInput">
+                <input type="number" id="minutesInput" value="25" min="1" max="180">
+                <input type="number" id="secondsInput" value="00" min="0" max="59">
+            </div>
+
+            <div class="timer-label" id="timerLabel">Expert in Sacrifice</div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+            <div class="primary-controls">
+                <!-- Reset Button -->
+                <button class="btn btn-secondary" id="resetBtn" aria-label="Reset Timer" style="opacity: 0; pointer-events: none;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 12" /><path d="M3 5v7h7" /></svg>
+                </button>
+
+                <!-- Play/Pause Button -->
+                <button class="btn btn-main" id="startBtn" aria-label="Start Timer">
+                    <svg id="playIcon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                    <svg id="pauseIcon" viewBox="0 0 24 24" style="display: none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
+                </button>
+                
+                <div style="width: 48px"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div class="modal-overlay" id="historyModal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <div class="modal-title">Sacrifice History</div>
+                <button class="modal-close" id="closeModal">&times;</button>
+            </div>
+            <div class="history-list" id="historyList">
+                <div style="text-align:center; padding: 20px; color: var(--text-secondary);">Loading history...</div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Import Firestore to be compatible with Study Flow
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { 
+            getFirestore, 
+            doc, 
+            setDoc, 
+            getDoc, 
+            updateDoc, 
+            increment, 
+            arrayUnion, 
+            onSnapshot 
+        } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- FIREBASE CONFIGURATION ---
+        const firebaseConfig = {
+            apiKey: "AIzaSyCYY2GQqS0tCXb7Oxw8AWXhpexq9e8VRUs",
+            authDomain: "aspirehub-32863.firebaseapp.com",
+            projectId: "aspirehub-32863",
+            storageBucket: "aspirehub-32863.appspot.com",
+            messagingSenderId: "686810111182",
+            appId: "1:686810111182:web:4290b4b1b6e64934ec449f",
+            measurementId: "G-KX41R0SSMY",
+            databaseURL: "https://aspirehub-32863-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        
+        // Use Global App ID for Canvas
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        let currentUser = null;
+
+        // --- CORE STATE ---
+        const CONFIG = {
+            defaultTime: 25 * 60, // seconds
+        };
+
+        let state = {
+            totalTime: CONFIG.defaultTime,
+            timeLeft: CONFIG.defaultTime,
+            isRunning: false,
+            isPaused: false,
+            theme: localStorage.getItem('zen_theme') || 'dark',
+            currentXP: 0
+        };
+
+        const els = {
+            timerDisplay: document.getElementById('timerDisplay'),
+            timerLabel: document.getElementById('timerLabel'),
+            startBtn: document.getElementById('startBtn'),
+            resetBtn: document.getElementById('resetBtn'),
+            playIcon: document.getElementById('playIcon'),
+            pauseIcon: document.getElementById('pauseIcon'),
+            themeBtn: document.getElementById('themeBtn'),
+            timeInput: document.getElementById('timeInput'),
+            minInput: document.getElementById('minutesInput'),
+            secInput: document.getElementById('secondsInput'),
+            xpBadge: document.getElementById('xpBadge'),
+            xpValue: document.getElementById('xpValue'),
+            modal: document.getElementById('historyModal'),
+            closeModal: document.getElementById('closeModal'),
+            historyList: document.getElementById('historyList')
+        };
+
+        let timerInterval = null;
+        let expectedEndTime = 0;
+
+        // --- PREVENT REFRESH ---
+        window.addEventListener('beforeunload', (e) => {
+            if (state.isRunning) {
+                e.preventDefault(); 
+                e.returnValue = '';
+            }
+        });
+
+        // --- INITIALIZATION ---
+        function init() {
+            applyTheme(state.theme);
+            loadTimerState();
+            renderTime();
+            
+            // UI Listeners
+            els.startBtn.addEventListener('click', toggleTimer);
+            els.resetBtn.addEventListener('click', resetTimer);
+            els.themeBtn.addEventListener('click', toggleTheme);
+            els.timerDisplay.addEventListener('click', editTime);
+            
+            [els.minInput, els.secInput].forEach(input => {
+                input.addEventListener('blur', saveEditedTime);
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') saveEditedTime();
+                });
+            });
+
+            els.xpBadge.addEventListener('click', openHistory);
+            els.closeModal.addEventListener('click', closeHistory);
+            els.modal.addEventListener('click', (e) => {
+                if (e.target === els.modal) closeHistory();
+            });
+
+            // Firebase Auth (Canvas Compatible)
+            initAuth();
+        }
+
+        const initAuth = async () => {
+            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                await signInWithCustomToken(auth, __initial_auth_token);
+            } else {
+                await signInAnonymously(auth);
+            }
+        };
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                setupRealtimeSync(user.uid);
+            } else {
+                els.xpValue.innerText = "...";
+            }
+        });
+
+        // --- FIRESTORE SYNC ---
+        function setupRealtimeSync(uid) {
+            // XP lives in a 'gamification' sub-collection or similar
+            // We'll keep XP simple in 'gamification/stats'
+            const xpRef = doc(db, 'artifacts', appId, 'users', uid, 'gamification', 'stats');
+            
+            onSnapshot(xpRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    state.currentXP = data.totalXS || 0;
+                    animateXP(state.currentXP);
+                } else {
+                    state.currentXP = 0;
+                    animateXP(0);
+                }
+            });
+        }
+
+        function animateXP(target) {
+            els.xpValue.innerText = target;
+        }
+
+        async function saveSession(durationSeconds) {
+            if (!currentUser) return;
+            
+            const minutes = Math.floor(durationSeconds / 60);
+            if (minutes < 1) return; 
+
+            // 1. Calculate Data
+            const xpEarned = minutes * 2; 
+            const hoursEarned = durationSeconds / 3600;
+            const uid = currentUser.uid;
+            
+            // Get local ISO date string "YYYY-MM-DD"
+            const date = new Date();
+            const offset = date.getTimezoneOffset() * 60000;
+            const localDate = new Date(date.getTime() - offset);
+            const todayStr = localDate.toISOString().split('T')[0];
+
+            // 2. Update Study Flow Data (tracker_data/v3_challenge_history)
+            // This is the critical link requested by the user
+            const studyFlowRef = doc(db, 'artifacts', appId, 'users', uid, 'tracker_data', 'v3_challenge_history');
+            
+            // Using dot notation to update a specific key in the history map
+            const studyFlowUpdate = {
+                [`history.${todayStr}`]: increment(hoursEarned)
+            };
+            
+            // 3. Update XP & History List (gamification/stats)
+            const gamificationRef = doc(db, 'artifacts', appId, 'users', uid, 'gamification', 'stats');
+            const historyEntry = {
+                date: new Date().toISOString(),
+                duration: durationSeconds,
+                xp: xpEarned
+            };
+            
+            try {
+                // Execute updates
+                // Note: using setDoc with merge: true ensures document creation if missing
+                await setDoc(studyFlowRef, studyFlowUpdate, { merge: true });
+                
+                await setDoc(gamificationRef, {
+                    totalXS: increment(xpEarned),
+                    history: arrayUnion(historyEntry)
+                }, { merge: true });
+
+                els.timerLabel.innerText = `+${xpEarned} XS | Saved to Grid`;
+            } catch (e) {
+                console.error("Save failed:", e);
+                els.timerLabel.innerText = "Error Saving";
+            }
+        }
+
+        // --- HISTORY DISPLAY ---
+        async function openHistory() {
+            els.modal.classList.add('open');
+            if (!currentUser) return;
+
+            const uid = currentUser.uid;
+            const gamificationRef = doc(db, 'artifacts', appId, 'users', uid, 'gamification', 'stats');
+            
+            try {
+                const docSnap = await getDoc(gamificationRef);
+                if (docSnap.exists() && docSnap.data().history) {
+                    renderHistoryList(docSnap.data().history);
+                } else {
+                    els.historyList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-secondary)">No sacrifices made yet.</div>';
+                }
+            } catch (e) {
+                console.error("Fetch history error", e);
+            }
+        }
+
+        function renderHistoryList(historyArray) {
+            // Sort newest first
+            const entries = [...historyArray].sort((a,b) => new Date(b.date) - new Date(a.date));
+            
+            els.historyList.innerHTML = '';
+            
+            entries.forEach(entry => {
+                const date = new Date(entry.date);
+                const dateStr = date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit' });
+                const mins = Math.floor(entry.duration / 60);
+
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <span class="history-date">${dateStr} • ${mins}m</span>
+                    <span class="history-val">+${entry.xp} XS</span>
+                `;
+                els.historyList.appendChild(div);
+            });
+        }
+
+        function closeHistory() {
+            els.modal.classList.remove('open');
+        }
+
+        // --- TIMER PERSISTENCE ---
+        function saveTimerState() {
+            const timerState = {
+                totalTime: state.totalTime,
+                timeLeft: state.timeLeft,
+                isRunning: state.isRunning,
+                isPaused: state.isPaused,
+                expectedEndTime: expectedEndTime
+            };
+            localStorage.setItem('timerState', JSON.stringify(timerState));
+        }
+
+        function loadTimerState() {
+            const saved = localStorage.getItem('timerState');
+            if (saved) {
+                const timerState = JSON.parse(saved);
+                state.totalTime = timerState.totalTime;
+                state.timeLeft = timerState.timeLeft;
+                state.isRunning = timerState.isRunning;
+                state.isPaused = timerState.isPaused;
+                expectedEndTime = timerState.expectedEndTime;
+                
+                // Resume timer if it was running
+                if (state.isRunning && expectedEndTime) {
+                    const now = Date.now();
+                    const remaining = expectedEndTime - now;
+                    
+                    if (remaining > 0) {
+                        state.timeLeft = remaining / 1000;
+                        resumeTimer();
+                    } else {
+                        completeSession();
+                    }
+                } else if (state.isPaused) {
+                    updateUIState('paused');
+                }
+            }
+        }
+
+        function resumeTimer() {
+            state.isRunning = true;
+            updateUIState('running');
+            
+            timerInterval = setInterval(() => {
+                const now = Date.now();
+                const delta = expectedEndTime - now;
+                
+                if (delta <= 0) {
+                    completeSession();
+                } else {
+                    state.timeLeft = delta / 1000;
+                    renderTime();
+                    saveTimerState();
+                }
+            }, 100);
+        }
+
+        // --- TIMER ENGINE ---
+        function toggleTimer() {
+            if (state.isRunning) pauseTimer();
+            else startTimer();
+        }
+
+        function startTimer() {
+            const now = Date.now();
+            expectedEndTime = now + (state.timeLeft * 1000);
+            
+            state.isRunning = true;
+            state.isPaused = false;
+            updateUIState('running');
+            saveTimerState();
+            
+            timerInterval = setInterval(() => {
+                const now = Date.now();
+                const delta = expectedEndTime - now;
+                
+                if (delta <= 0) {
+                    completeSession();
+                } else {
+                    state.timeLeft = delta / 1000;
+                    renderTime();
+                    saveTimerState();
+                }
+            }, 100);
+        }
+
+        function pauseTimer() {
+            clearInterval(timerInterval);
+            state.isRunning = false;
+            state.isPaused = true;
+            updateUIState('paused');
+            saveTimerState();
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            state.isRunning = false;
+            state.isPaused = false;
+            state.timeLeft = state.totalTime;
+            renderTime();
+            updateUIState('idle');
+            localStorage.removeItem('timerState');
+        }
+
+        function completeSession() {
+            clearInterval(timerInterval);
+            
+            // Save to Firestore (Links to Study Flow)
+            saveSession(state.totalTime);
+            
+            state.timeLeft = 0;
+            renderTime();
+            playSingingBowl(); 
+            
+            state.isRunning = false;
+            state.isPaused = false;
+            updateUIState('complete');
+            localStorage.removeItem('timerState');
+        }
+
+        // --- UI STATE ---
+        function updateUIState(status) {
+            els.playIcon.style.display = status === 'running' ? 'none' : 'block';
+            els.pauseIcon.style.display = status === 'running' ? 'block' : 'none';
+
+            if (status === 'idle') {
+                els.resetBtn.style.opacity = '0';
+                els.resetBtn.style.pointerEvents = 'none';
+                els.timerLabel.innerText = "Tap time to edit";
+            } else {
+                els.resetBtn.style.opacity = '1';
+                els.resetBtn.style.pointerEvents = 'auto';
+            }
+
+            if (status === 'running') els.timerLabel.innerText = "Focusing...";
+            if (status === 'paused') els.timerLabel.innerText = "Paused";
+            if (status === 'complete') els.timerLabel.innerText = "Completed"; 
+            
+            if (status === 'running') els.timerDisplay.classList.add('breathing');
+            else els.timerDisplay.classList.remove('breathing');
+        }
+
+        function renderTime() {
+            const minutes = Math.floor(Math.ceil(state.timeLeft) / 60);
+            const seconds = Math.ceil(state.timeLeft) % 60;
+            const text = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            els.timerDisplay.innerText = text;
+            document.title = state.isRunning ? `${text} • Caffine` : 'Caffine';
+        }
+
+        // --- EDIT MODE ---
+        function editTime() {
+            if (state.isRunning) return;
+            els.timerDisplay.style.display = 'none';
+            els.timeInput.classList.add('active');
+            
+            const minutes = Math.floor(state.totalTime / 60);
+            const seconds = state.totalTime % 60;
+            
+            els.minInput.value = minutes;
+            els.secInput.value = seconds.toString().padStart(2, '0');
+            els.minInput.focus();
+        }
+
+        function saveEditedTime() {
+            let m = parseInt(els.minInput.value) || 0;
+            let s = parseInt(els.secInput.value) || 0;
+            
+            if (m > 180) m = 180;
+            if (s > 59) s = 59;
+            if (m === 0 && s === 0) m = 25;
+
+            const newTime = (m * 60) + s;
+            state.totalTime = newTime;
+            state.timeLeft = newTime;
+            
+            els.timeInput.classList.remove('active');
+            els.timerDisplay.style.display = 'block';
+            renderTime();
+        }
+
+        // --- AUDIO ---
+        function playSingingBowl() {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return;
+            
+            const audioCtx = new AudioContext();
+            const oscillator = audioCtx.createOscillator();
+            const gainNode = audioCtx.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioCtx.destination);
+
+            oscillator.type = 'sine'; 
+            oscillator.frequency.setValueAtTime(432, audioCtx.currentTime); 
+            
+            gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+            gainNode.gain.linearRampToValueAtTime(0.3, audioCtx.currentTime + 0.1);
+            gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 4);
+
+            oscillator.start();
+            oscillator.stop(audioCtx.currentTime + 4);
+        }
+
+        // --- THEME ---
+        function toggleTheme() {
+            state.theme = state.theme === 'light' ? 'dark' : 'light';
+            localStorage.setItem('zen_theme', state.theme);
+            applyTheme(state.theme);
+        }
+
+        function applyTheme(theme) {
+            document.documentElement.setAttribute('data-theme', theme);
+            const metaThemeColor = document.querySelector("meta[name=theme-color]");
+            metaThemeColor.setAttribute("content", theme === 'dark' ? "#000000" : "#fffbeb");
+        }
+
+        // Start
+        init();
+    </script>
+</body>
+</html>

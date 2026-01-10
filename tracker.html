@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Caffine</title>
+    <link rel="icon" type="image/png" href="logo.png">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Confetti JS -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        physics: '#d97706', // Amber 600
+                        chemistry: '#d97706', // Amber 600
+                        math: '#d97706', // Amber 600
+                        dark: '#000000', // Pure Black
+                        card: '#1a1a1a', // Dark Grey for blending
+                        surface: '#f59e0b' // Amber 500 for borders
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    animation: {
+                        'pulse-slow': 'pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                        'bounce-sm': 'bounce-sm 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                    },
+                    keyframes: {
+                        'bounce-sm': {
+                            '0%, 100%': { transform: 'scale(1)' },
+                            '50%': { transform: 'scale(0.9)' },
+                        }
+                    },
+                    screens: {
+                        'xs': '375px',
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #fffbeb; /* Lighter amber beige */
+            transition: background-color 0.5s ease, color 0.5s ease;
+            -webkit-tap-highlight-color: transparent; /* Remove tap highlight on mobile */
+        }
+
+        .dark body {
+            background-color: #000000; /* Pure Black */
+        }
+
+        /* Hide scrollbar for stats carousel */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Premium Checkbox */
+        .checkbox-wrapper input:checked + div {
+            background-color: currentColor;
+            border-color: currentColor;
+            transform: scale(1);
+        }
+        .checkbox-wrapper input:checked + div svg {
+            opacity: 1;
+            transform: scale(1);
+        }
+        .checkbox-wrapper div {
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        /* Glass Header */
+        .glass-header {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+        }
+        .dark .glass-header {
+            background: rgba(0, 0, 0, 0.8); /* Darker glass for black theme */
+            border-bottom: 1px solid #f59e0b; /* Amber 500 border */
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        /* Soft Cards */
+        .soft-card {
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+        }
+        .dark .soft-card {
+            background-color: #1a1a1a; /* Grey blend */
+            box-shadow: none; /* Flat aesthetic for pure dark mode */
+            border: 1px solid #f59e0b; /* Amber 500 subtle border */
+        }
+
+        /* Progress Bar Glow */
+        .glow-bar-physics { box-shadow: 0 0 12px rgba(217, 119, 6, 0.4); } /* Amber glow */
+        .glow-bar-chemistry { box-shadow: 0 0 12px rgba(217, 119, 6, 0.4); }
+        .glow-bar-math { box-shadow: 0 0 12px rgba(217, 119, 6, 0.4); }
+
+        .progress-transition {
+            transition: width 1.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+
+        /* Scrollbar aesthetics */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #333; }
+    </style>
+</head>
+<body class="text-slate-600 dark:text-gray-400 min-h-screen pb-24 selection:bg-purple-100 dark:selection:bg-purple-900/50 dark:selection:text-purple-200">
+
+    <!-- Sticky Header -->
+    <header class="fixed top-0 w-full z-50 glass-header">
+        <div class="max-w-6xl mx-auto px-4 py-3 md:px-6 md:py-4">
+            <div class="flex justify-between items-center mb-3 md:mb-4">
+                <div class="flex items-center gap-3 md:gap-4">
+                    <img src="logo.png" alt="Caffine" class="w-12 h-12 md:w-14 md:h-14">
+                    <div>
+                        <h1 class="text-sm md:text-base font-semibold tracking-tight text-slate-900 dark:text-gray-100 leading-tight">Caffine</h1>
+                        <div class="flex items-center gap-2">
+                            <span id="sync-status-dot" class="w-1.5 h-1.5 rounded-full bg-slate-300 transition-colors duration-300"></span>
+                            <span id="sync-status-text" class="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-500">Offline</span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="toggleTheme()" class="h-8 w-8 md:h-9 md:w-9 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors flex items-center justify-center text-slate-500 dark:text-gray-400 focus:outline-none tap-highlight-transparent">
+                    <i class="fa-solid fa-moon dark:hidden text-xs"></i>
+                    <i class="fa-solid fa-sun hidden dark:block text-xs"></i>
+                </button>
+            </div>
+            
+            <!-- Global Progress Bar -->
+            <div class="flex items-center gap-3 md:gap-4">
+                <div class="flex-1 bg-slate-100 dark:bg-white/5 rounded-full h-1 md:h-1.5 overflow-hidden">
+                    <div id="global-progress" class="bg-slate-900 dark:bg-white h-full rounded-full progress-transition shadow-[0_0_10px_rgba(0,0,0,0.1)] dark:shadow-[0_0_10px_rgba(255,255,255,0.2)]" style="width: 0%"></div>
+                </div>
+                <span id="global-percentage" class="text-[10px] md:text-xs font-bold text-slate-900 dark:text-white w-7 text-right font-mono">0%</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-6xl mx-auto px-4 pt-28 md:px-6 md:pt-36">
+        
+        <!-- Dashboard Stats (Horizontal Scroll on Mobile) -->
+        <div class="flex md:grid md:grid-cols-3 overflow-x-auto snap-x snap-mandatory gap-4 mb-6 md:mb-10 pb-4 md:pb-0 hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
+            <!-- Stat Card 1 -->
+            <div class="soft-card bg-white dark:bg-card p-5 md:p-6 rounded-2xl flex flex-col justify-between h-28 md:h-32 min-w-[85vw] sm:min-w-[45vw] md:min-w-0 snap-center">
+                <div class="flex justify-between items-start">
+                    <p class="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-500">Tasks Done</p>
+                    <i class="fa-solid fa-check-circle text-emerald-500/80 text-lg"></i>
+                </div>
+                <h3 class="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 dark:text-gray-100 mt-auto" id="total-tasks-done">0/0</h3>
+            </div>
+            
+            <!-- Stat Card 2 -->
+            <div class="soft-card bg-white dark:bg-card p-5 md:p-6 rounded-2xl flex flex-col justify-between h-28 md:h-32 min-w-[85vw] sm:min-w-[45vw] md:min-w-0 snap-center">
+                <div class="flex justify-between items-start">
+                    <p class="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-500">Current Rank</p>
+                    <i class="fa-solid fa-medal text-amber-500/80 text-lg"></i>
+                </div>
+                <h3 class="text-2xl md:text-3xl font-semibold tracking-tight text-amber-500 mt-auto" id="user-rank">Novice</h3>
+            </div>
+
+            <!-- Stat Card 3 -->
+            <div class="soft-card bg-white dark:bg-card p-5 md:p-6 rounded-2xl flex flex-col justify-between h-28 md:h-32 min-w-[85vw] sm:min-w-[45vw] md:min-w-0 snap-center">
+                <div class="flex justify-between items-start">
+                    <p class="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-500">Focus Area</p>
+                    <i class="fa-solid fa-crosshairs text-rose-500/80 text-lg"></i>
+                </div>
+                <h3 class="text-xl md:text-2xl font-semibold tracking-tight text-slate-900 dark:text-gray-100 mt-auto truncate" id="focus-area">Balanced</h3>
+            </div>
+        </div>
+
+        <!-- Subjects Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
+            
+            <!-- Physics Section -->
+            <div class="soft-card bg-white dark:bg-card rounded-2xl overflow-hidden flex flex-col h-full">
+                <div class="px-5 py-4 md:px-6 md:py-6 border-b border-slate-50 dark:border-white/5 bg-physics/5 dark:bg-physics/10">
+                    <div class="flex justify-between items-end mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-white dark:bg-white/5 flex items-center justify-center text-physics shadow-sm dark:shadow-none dark:border dark:border-white/5">
+                                <i class="fa-solid fa-atom text-xs md:text-sm"></i>
+                            </div>
+                            <h2 class="text-base md:text-lg font-semibold tracking-tight text-slate-900 dark:text-gray-100">Physics</h2>
+                        </div>
+                        <span id="physics-text" class="text-[10px] md:text-xs font-bold text-physics font-mono">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-200/50 dark:bg-white/10 rounded-full h-1">
+                        <div id="physics-bar" class="bg-physics h-1 rounded-full progress-transition glow-bar-physics" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div id="physics-list" class="p-3 md:p-4 space-y-2 flex-grow">
+                    <!-- Javascript will populate this -->
+                </div>
+            </div>
+
+            <!-- Chemistry Section -->
+            <div class="soft-card bg-white dark:bg-card rounded-2xl overflow-hidden flex flex-col h-full">
+                <div class="px-5 py-4 md:px-6 md:py-6 border-b border-slate-50 dark:border-white/5 bg-chemistry/5 dark:bg-chemistry/10">
+                    <div class="flex justify-between items-end mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-white dark:bg-white/5 flex items-center justify-center text-chemistry shadow-sm dark:shadow-none dark:border dark:border-white/5">
+                                <i class="fa-solid fa-flask text-xs md:text-sm"></i>
+                            </div>
+                            <h2 class="text-base md:text-lg font-semibold tracking-tight text-slate-900 dark:text-gray-100">Chemistry</h2>
+                        </div>
+                        <span id="chemistry-text" class="text-[10px] md:text-xs font-bold text-chemistry font-mono">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-200/50 dark:bg-white/10 rounded-full h-1">
+                        <div id="chemistry-bar" class="bg-chemistry h-1 rounded-full progress-transition glow-bar-chemistry" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div id="chemistry-list" class="p-3 md:p-4 space-y-2 flex-grow">
+                    <!-- Javascript will populate this -->
+                </div>
+            </div>
+
+            <!-- Maths Section -->
+            <div class="soft-card bg-white dark:bg-card rounded-2xl overflow-hidden flex flex-col h-full">
+                <div class="px-5 py-4 md:px-6 md:py-6 border-b border-slate-50 dark:border-white/5 bg-math/5 dark:bg-math/10">
+                    <div class="flex justify-between items-end mb-3">
+                        <div class="flex items-center gap-3">
+                            <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-white dark:bg-white/5 flex items-center justify-center text-math shadow-sm dark:shadow-none dark:border dark:border-white/5">
+                                <i class="fa-solid fa-calculator text-xs md:text-sm"></i>
+                            </div>
+                            <h2 class="text-base md:text-lg font-semibold tracking-tight text-slate-900 dark:text-gray-100">Maths</h2>
+                        </div>
+                        <span id="math-text" class="text-[10px] md:text-xs font-bold text-math font-mono">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-200/50 dark:bg-white/10 rounded-full h-1">
+                        <div id="math-bar" class="bg-math h-1 rounded-full progress-transition glow-bar-math" style="width: 0%"></div>
+                    </div>
+                </div>
+                <div id="math-list" class="p-3 md:p-4 space-y-2 flex-grow">
+                    <!-- Javascript will populate this -->
+                </div>
+            </div>
+
+        </div>
+
+        <div class="mt-12 text-center">
+            <p class="text-[9px] md:text-[10px] font-medium uppercase tracking-widest text-slate-400 dark:text-gray-600">
+                Synching to Cloud <span class="mx-1">•</span> AspireHub
+            </p>
+        </div>
+
+    </main>
+
+    <!-- Firebase Logic -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCYY2GQqS0tCXb7Oxw8AWXhpexq9e8VRUs",
+            authDomain: "aspirehub-32863.firebaseapp.com",
+            projectId: "aspirehub-32863",
+            storageBucket: "aspirehub-32863.appspot.com",
+            messagingSenderId: "686810111182",
+            appId: "1:686810111182:web:4290b4b1b6e64934ec449f",
+            measurementId: "G-KX41R0SSMY",
+            databaseURL: "https://aspirehub-32863-default-rtdb.asia-southeast1.firebasedatabase.app"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'syllabus-tracker-v1';
+
+        let currentUser = null;
+        let unsubscribe = null;
+
+        const statusDot = document.getElementById('sync-status-dot');
+        const statusText = document.getElementById('sync-status-text');
+
+        function setStatus(state) {
+            if (state === 'offline') {
+                statusDot.className = "w-1.5 h-1.5 rounded-full bg-slate-300";
+                statusText.innerText = "Offline";
+            } else if (state === 'syncing') {
+                statusDot.className = "w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse";
+                statusText.innerText = "Syncing";
+            } else if (state === 'synced') {
+                statusDot.className = "w-1.5 h-1.5 rounded-full bg-emerald-500";
+                statusText.innerText = "Synced";
+            }
+        }
+
+        signInAnonymously(auth).catch((error) => {
+            console.error("Auth Error:", error);
+            setStatus('offline');
+        });
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                setStatus('syncing');
+                setupRealtimeListener(user.uid);
+            } else {
+                currentUser = null;
+                setStatus('offline');
+                if (unsubscribe) unsubscribe();
+            }
+        });
+
+        function setupRealtimeListener(userId) {
+            const docRef = doc(db, 'artifacts', appId, 'users', userId, 'data', 'syllabus');
+            unsubscribe = onSnapshot(docRef, (docSnapshot) => {
+                if (docSnapshot.exists()) {
+                    const cloudData = docSnapshot.data();
+                    if (JSON.stringify(cloudData) !== JSON.stringify(window.appData)) {
+                        window.appData = cloudData;
+                        saveDataLocal(); 
+                        init();
+                    }
+                    setStatus('synced');
+                } else {
+                    saveToCloud();
+                }
+            }, (error) => {
+                console.error("Sync Error:", error);
+                setStatus('offline');
+            });
+        }
+
+        window.saveToCloud = async function() {
+            if (!currentUser) return;
+            setStatus('syncing');
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'data', 'syllabus'), window.appData);
+                setStatus('synced');
+            } catch (e) {
+                console.error("Save Error", e);
+                setStatus('offline');
+            }
+        }
+    </script>
+
+    <script>
+        // --- Core Application Logic ---
+
+        const defaultData = {
+            physics: [
+                { name: "Units and Dimensions", theory: false, questions: false },
+                { name: "Vectors", theory: false, questions: false },
+                { name: "Kinematics", theory: false, questions: false },
+                { name: "Newton’s Laws of Motion", theory: false, questions: false },
+                { name: "Friction", theory: false, questions: false },
+                { name: "Work, Energy and Power", theory: false, questions: false },
+                { name: "Centre of Mass", theory: false, questions: false },
+                { name: "Rotation – MOI & Torque", theory: false, questions: false }
+            ],
+            chemistry: [
+                { name: "Mole Concept", desc: "Basic calculation", theory: false, questions: false },
+                { name: "Atomic Structure", desc: "Basics", theory: false, questions: false },
+                { name: "States of Matter", desc: "Ideal Gas Eq", theory: false, questions: false },
+                { name: "Periodic Table & Bonding", desc: "Must for Organic", theory: false, questions: false },
+                { name: "Thermodynamics", desc: "Gibbs Free Energy", theory: false, questions: false },
+                { name: "Ionic Equilibrium", desc: "pH & Solubility", theory: false, questions: false },
+                { name: "Redox Reactions", desc: "Balancing", theory: false, questions: false }
+            ],
+            math: [
+                { name: "Basic Logarithms", theory: false, questions: false },
+                { name: "Quadratic Equations", theory: false, questions: false },
+                { name: "Trigonometry", theory: false, questions: false },
+                { name: "Permutations & Combinations", desc: "Probability Basis", theory: false, questions: false },
+                { name: "Coordinate Geometry", desc: "Line & Circle", theory: false, questions: false }
+            ]
+        };
+
+        window.appData = JSON.parse(localStorage.getItem('syllabusTrackerData')) || JSON.parse(JSON.stringify(defaultData));
+
+        // Initialize Theme
+        if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
+        function toggleTheme() {
+            document.documentElement.classList.toggle('dark');
+            if(document.documentElement.classList.contains('dark')){
+                localStorage.setItem('theme', 'dark');
+            } else {
+                localStorage.setItem('theme', 'light');
+            }
+        }
+
+        function renderList(subject, listId, colorClass) {
+            const container = document.getElementById(listId);
+            container.innerHTML = '';
+
+            window.appData[subject].forEach((chapter, index) => {
+                const isDone = chapter.theory && chapter.questions;
+                
+                const item = document.createElement('div');
+                // Mobile-first friendly: flex-row always, shrink checkboxes if needed, truncate text
+                item.className = `p-3 rounded-xl transition-all duration-200 hover:bg-slate-50 dark:hover:bg-white/5 flex flex-row items-center justify-between gap-3 group`;
+                
+                const html = `
+                    <div class="flex-1 min-w-0">
+                        <h4 class="font-medium text-[13px] md:text-[15px] text-slate-700 dark:text-gray-300 ${isDone ? 'line-through text-slate-400 dark:text-gray-600 decoration-slate-300 dark:decoration-gray-700' : ''} transition-all truncate">${chapter.name}</h4>
+                        ${chapter.desc ? `<p class="text-[9px] md:text-[10px] uppercase tracking-wide text-slate-400 dark:text-gray-600 mt-0.5 truncate">${chapter.desc}</p>` : ''}
+                    </div>
+                    
+                    <div class="flex items-center gap-2 md:gap-3 shrink-0">
+                        <!-- Theory Checkbox -->
+                        <label class="checkbox-wrapper cursor-pointer flex items-center gap-1.5 md:gap-2 group/check p-1">
+                            <span class="text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-slate-300 dark:text-gray-600 group-hover/check:text-${colorClass} transition-colors">Theory</span>
+                            <div class="relative w-4 h-4 md:w-5 md:h-5">
+                                <input type="checkbox" class="hidden" 
+                                    onchange="updateStatus('${subject}', ${index}, 'theory')" 
+                                    ${chapter.theory ? 'checked' : ''}>
+                                <div class="w-full h-full border border-slate-300 dark:border-gray-700 rounded-md flex items-center justify-center text-white transition-all shadow-sm group-hover/check:border-${colorClass} dark:bg-white/5">
+                                    <svg class="w-2.5 h-2.5 md:w-3 md:h-3 opacity-0 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                </div>
+                            </div>
+                        </label>
+
+                        <!-- Questions Checkbox -->
+                        <label class="checkbox-wrapper cursor-pointer flex items-center gap-1.5 md:gap-2 group/check p-1">
+                             <span class="text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-slate-300 dark:text-gray-600 group-hover/check:text-${colorClass} transition-colors">Prob</span>
+                            <div class="relative w-4 h-4 md:w-5 md:h-5">
+                                <input type="checkbox" class="hidden" 
+                                    onchange="updateStatus('${subject}', ${index}, 'questions')" 
+                                    ${chapter.questions ? 'checked' : ''}>
+                                <div class="w-full h-full border border-slate-300 dark:border-gray-700 rounded-md flex items-center justify-center text-white transition-all shadow-sm group-hover/check:border-${colorClass} dark:bg-white/5">
+                                    <svg class="w-2.5 h-2.5 md:w-3 md:h-3 opacity-0 transition-all duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                `;
+                item.innerHTML = html;
+                container.appendChild(item);
+            });
+        }
+
+        window.updateStatus = function(subject, index, type) {
+            window.appData[subject][index][type] = !window.appData[subject][index][type];
+            window.saveDataLocal();
+            if (window.saveToCloud) window.saveToCloud();
+            calculateStats();
+            
+            // Re-render specifically
+            const colorMap = { physics: 'physics', chemistry: 'chemistry', math: 'math' };
+            renderList(subject, `${subject}-list`, colorMap[subject]);
+        }
+
+        window.saveDataLocal = function() {
+            localStorage.setItem('syllabusTrackerData', JSON.stringify(window.appData));
+        }
+
+        window.calculateStats = function() {
+            let totalTasks = 0;
+            let completedTasks = 0;
+            
+            const subjects = ['physics', 'chemistry', 'math'];
+            const stats = {};
+
+            subjects.forEach(sub => {
+                let subTotal = window.appData[sub].length * 2;
+                let subDone = 0;
+                
+                window.appData[sub].forEach(ch => {
+                    if(ch.theory) subDone++;
+                    if(ch.questions) subDone++;
+                });
+
+                stats[sub] = { total: subTotal, done: subDone, percent: subTotal === 0 ? 0 : Math.round((subDone/subTotal)*100) };
+                
+                totalTasks += subTotal;
+                completedTasks += subDone;
+
+                document.getElementById(`${sub}-bar`).style.width = `${stats[sub].percent}%`;
+                document.getElementById(`${sub}-text`).innerText = `${stats[sub].percent}%`;
+            });
+
+            const globalPercent = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
+            document.getElementById('global-progress').style.width = `${globalPercent}%`;
+            document.getElementById('global-percentage').innerText = `${globalPercent}%`;
+            document.getElementById('total-tasks-done').innerText = `${completedTasks}/${totalTasks}`;
+
+            // Rank Logic
+            const rankEl = document.getElementById('user-rank');
+            if(globalPercent === 0) rankEl.innerText = "Novice";
+            else if(globalPercent < 25) rankEl.innerText = "Aspirant";
+            else if(globalPercent < 50) rankEl.innerText = "Scholar";
+            else if(globalPercent < 75) rankEl.innerText = "Master";
+            else if(globalPercent < 100) rankEl.innerText = "Grandmaster";
+            else {
+                rankEl.innerText = "Legend";
+                if(!sessionStorage.getItem('confettiShown')) {
+                    triggerConfetti();
+                    sessionStorage.setItem('confettiShown', 'true');
+                }
+            }
+
+            // Focus Logic
+            let minPercent = 100;
+            let lagSubject = "Balanced";
+            subjects.forEach(sub => {
+                if(stats[sub].percent < minPercent) {
+                    minPercent = stats[sub].percent;
+                    lagSubject = sub.charAt(0).toUpperCase() + sub.slice(1);
+                }
+            });
+            
+            if(stats.physics.percent === stats.chemistry.percent && stats.chemistry.percent === stats.math.percent && stats.math.percent > 0) {
+                lagSubject = "Consistent";
+            }
+            if(globalPercent === 100) lagSubject = "Revision";
+
+            document.getElementById('focus-area').innerText = lagSubject;
+        }
+
+        function triggerConfetti() {
+            var duration = 3 * 1000;
+            var animationEnd = Date.now() + duration;
+            var defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+            function randomInRange(min, max) { return Math.random() * (max - min) + min; }
+
+            var interval = setInterval(function() {
+                var timeLeft = animationEnd - Date.now();
+                if (timeLeft <= 0) return clearInterval(interval);
+                var particleCount = 50 * (timeLeft / duration);
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        }
+
+        window.init = function() {
+            renderList('physics', 'physics-list', 'physics');
+            renderList('chemistry', 'chemistry-list', 'chemistry');
+            renderList('math', 'math-list', 'math');
+            calculateStats();
+        }
+
+        init();
+    </script>
+</body>
+</html>
