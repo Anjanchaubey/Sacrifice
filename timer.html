@@ -25,13 +25,50 @@
         }
 
         [data-theme="dark"] {
-            /* Dark Mode - Amber and Black */
-            --bg-color: #000000; /* Pure Black */
-            --surface-color: #1a1a1a; /* Dark gray */
-            --text-primary: #d97706; /* Amber 600 */
-            --text-secondary: #f59e0b; /* Amber 500 */
-            --accent-color: #f59e0b; /* Amber 500 */
+            --bg-color: #000000;
+            --surface-color: #1a1a1a;
+            --text-primary: #d97706;
+            --text-secondary: #f59e0b;
+            --accent-color: #f59e0b;
             --shadow-card: 0 4px 20px rgba(217,119,6,0.2);
+        }
+
+        /* Color Palettes */
+        [data-palette="blue"] {
+            --surface-color: #3b82f6;
+            --accent-color: #2563eb;
+        }
+        [data-palette="blue"][data-theme="dark"] {
+            --text-primary: #60a5fa;
+            --text-secondary: #93c5fd;
+            --accent-color: #60a5fa;
+        }
+        [data-palette="green"] {
+            --surface-color: #10b981;
+            --accent-color: #059669;
+        }
+        [data-palette="green"][data-theme="dark"] {
+            --text-primary: #34d399;
+            --text-secondary: #6ee7b7;
+            --accent-color: #34d399;
+        }
+        [data-palette="purple"] {
+            --surface-color: #a855f7;
+            --accent-color: #9333ea;
+        }
+        [data-palette="purple"][data-theme="dark"] {
+            --text-primary: #c084fc;
+            --text-secondary: #d8b4fe;
+            --accent-color: #c084fc;
+        }
+        [data-palette="rose"] {
+            --surface-color: #f43f5e;
+            --accent-color: #e11d48;
+        }
+        [data-palette="rose"][data-theme="dark"] {
+            --text-primary: #fb7185;
+            --text-secondary: #fda4af;
+            --accent-color: #fb7185;
         }
 
         /* --- GLOBAL RESET & TYPOGRAPHY --- */
@@ -107,6 +144,11 @@
             justify-content: center;
             flex-grow: 1;
             width: 100%;
+            transition: all 0.3s ease;
+        }
+        .focus-area.centered {
+            flex-grow: 1;
+            justify-content: center;
         }
 
         /* Responsive Huge Timer */
@@ -173,6 +215,12 @@
             align-items: center;
             gap: 32px;
             padding-bottom: 2vh;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .controls.hidden {
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
         }
 
         .primary-controls {
@@ -323,6 +371,86 @@
             50% { opacity: 0.7; }
         }
 
+        /* Theme Popup */
+        .theme-popup {
+            position: fixed;
+            top: 60px;
+            left: 20px;
+            background: var(--surface-color);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: var(--shadow-card);
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+        .theme-popup.open {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0);
+        }
+        .theme-section {
+            margin-bottom: 16px;
+        }
+        .theme-section:last-child {
+            margin-bottom: 0;
+        }
+        .theme-section-title {
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+            opacity: 0.7;
+        }
+        .mode-toggle {
+            display: flex;
+            gap: 8px;
+            background: rgba(0,0,0,0.1);
+            padding: 4px;
+            border-radius: 8px;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 6px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .mode-btn.active {
+            background: var(--accent-color);
+            color: white;
+        }
+        .palette-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+        .palette-btn {
+            width: 100%;
+            height: 40px;
+            border: 2px solid transparent;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .palette-btn.active {
+            border-color: var(--text-primary);
+            transform: scale(1.05);
+        }
+        .palette-amber { background: linear-gradient(135deg, #f59e0b, #d97706); }
+        .palette-blue { background: linear-gradient(135deg, #3b82f6, #2563eb); }
+        .palette-green { background: linear-gradient(135deg, #10b981, #059669); }
+        .palette-purple { background: linear-gradient(135deg, #a855f7, #9333ea); }
+        .palette-rose { background: linear-gradient(135deg, #f43f5e, #e11d48); }
+
     </style>
 </head>
 <body>
@@ -330,12 +458,20 @@
     <div class="app-container">
         <!-- Header -->
         <header>
-            <button class="theme-toggle" id="themeBtn" aria-label="Toggle Dark Mode">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+            <button class="theme-toggle" id="themeBtn" aria-label="Theme Settings">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m9.66-9H16m-6 0H4m15.66 5.66l-4.24-4.24M8.58 8.58l-4.24-4.24m12.02 12.02l-4.24-4.24M8.58 15.42l-4.24 4.24"/></svg>
             </button>
             
-            <div class="xp-badge" id="xpBadge">
-                <span id="xpValue">...</span> XS
+            <div class="flex items-center gap-4">
+                <!-- User Status -->
+                <div class="flex items-center gap-2">
+                    <div id="user-status-dot" class="w-2 h-2 rounded-full bg-slate-300 transition-colors"></div>
+                    <span id="user-status-text" class="text-xs text-slate-500 dark:text-slate-400">Offline</span>
+                </div>
+                
+                <div class="xp-badge" id="xpBadge">
+                    <span id="xpValue">...</span> XS
+                </div>
             </div>
         </header>
 
@@ -351,7 +487,7 @@
                 <input type="number" id="secondsInput" value="00" min="0" max="59">
             </div>
 
-            <div class="timer-label" id="timerLabel">Expert in Sacrifice</div>
+            <div class="timer-label" id="timerLabel">The Dark Knight Rises</div>
         </div>
 
         <!-- Controls -->
@@ -373,55 +509,109 @@
         </div>
     </div>
 
+    <!-- Theme Popup -->
+    <div class="theme-popup" id="themePopup">
+        <div class="theme-section">
+            <div class="theme-section-title">Mode</div>
+            <div class="mode-toggle">
+                <button class="mode-btn" id="lightModeBtn">Light</button>
+                <button class="mode-btn" id="darkModeBtn">Dark</button>
+            </div>
+        </div>
+        <div class="theme-section">
+            <div class="theme-section-title">Color</div>
+            <div class="palette-grid">
+                <button class="palette-btn palette-amber" data-palette="amber"></button>
+                <button class="palette-btn palette-blue" data-palette="blue"></button>
+                <button class="palette-btn palette-green" data-palette="green"></button>
+                <button class="palette-btn palette-purple" data-palette="purple"></button>
+                <button class="palette-btn palette-rose" data-palette="rose"></button>
+            </div>
+        </div>
+    </div>
+
     <!-- History Modal -->
     <div class="modal-overlay" id="historyModal">
         <div class="modal-card">
             <div class="modal-header">
-                <div class="modal-title">Sacrifice History</div>
+                <div class="modal-title">Gotham's Vigilance Log</div>
                 <button class="modal-close" id="closeModal">&times;</button>
             </div>
+            
+            <!-- Tab Switcher -->
+            <div style="display: flex; gap: 8px; margin-bottom: 20px; background: rgba(0,0,0,0.1); padding: 4px; border-radius: 12px;">
+                <button id="tab-sessions" class="tab-btn active" style="flex: 1; padding: 8px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; background: var(--accent-color); color: white;">Sessions</button>
+                <button id="tab-daily" class="tab-btn" style="flex: 1; padding: 8px; border: none; border-radius: 8px; font-weight: 600; font-size: 0.85rem; cursor: pointer; transition: all 0.2s; background: transparent; color: var(--text-secondary);">Daily Hours</button>
+            </div>
+            
+            <!-- Sessions List -->
             <div class="history-list" id="historyList">
                 <div style="text-align:center; padding: 20px; color: var(--text-secondary);">Loading history...</div>
+            </div>
+            
+            <!-- Daily Hours List -->
+            <div class="history-list" id="dailyList" style="display: none;">
+                <div style="text-align:center; padding: 20px; color: var(--text-secondary);">Loading daily hours...</div>
             </div>
         </div>
     </div>
 
     <script type="module">
-        // Import Firestore to be compatible with Study Flow
+        // Import Firestore
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { 
             getFirestore, 
             doc, 
             setDoc, 
             getDoc, 
-            updateDoc, 
             increment, 
             arrayUnion, 
             onSnapshot 
         } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // --- FIREBASE CONFIGURATION ---
         const firebaseConfig = {
             apiKey: "AIzaSyCYY2GQqS0tCXb7Oxw8AWXhpexq9e8VRUs",
             authDomain: "aspirehub-32863.firebaseapp.com",
             projectId: "aspirehub-32863",
             storageBucket: "aspirehub-32863.appspot.com",
             messagingSenderId: "686810111182",
-            appId: "1:686810111182:web:4290b4b1b6e64934ec449f",
-            measurementId: "G-KX41R0SSMY",
-            databaseURL: "https://aspirehub-32863-default-rtdb.asia-southeast1.firebasedatabase.app"
+            appId: "1:686810111182:web:4290b4b1b6e64934ec449f"
         };
-
-        // Initialize Firebase
+        
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+        const appId = 'caffine-tracker-v1';
         
-        // Use Global App ID for Canvas
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        // Auth functions
+        window.FirebaseAuth = {
+            logout: async () => {
+                await auth.signOut();
+                window.location.href = 'login.html';
+            },
+            getCurrentUser: () => auth.currentUser
+        };
 
         let currentUser = null;
+        let userDataListener = null;
+
+        // Status indicator elements
+        const statusDot = document.getElementById('user-status-dot');
+        const statusText = document.getElementById('user-status-text');
+        
+        function updateUserStatus(status) {
+            if (status === 'offline') {
+                statusDot.className = "w-2 h-2 rounded-full bg-slate-300 transition-colors";
+                statusText.textContent = "Offline";
+            } else if (status === 'syncing') {
+                statusDot.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse transition-colors";
+                statusText.textContent = "Syncing";
+            } else if (status === 'synced') {
+                statusDot.className = "w-2 h-2 rounded-full bg-emerald-500 transition-colors";
+                statusText.textContent = "Synced";
+            }
+        }
 
         // --- CORE STATE ---
         const CONFIG = {
@@ -434,6 +624,7 @@
             isRunning: false,
             isPaused: false,
             theme: localStorage.getItem('zen_theme') || 'dark',
+            palette: localStorage.getItem('zen_palette') || 'amber',
             currentXP: 0
         };
 
@@ -445,6 +636,9 @@
             playIcon: document.getElementById('playIcon'),
             pauseIcon: document.getElementById('pauseIcon'),
             themeBtn: document.getElementById('themeBtn'),
+            themePopup: document.getElementById('themePopup'),
+            lightModeBtn: document.getElementById('lightModeBtn'),
+            darkModeBtn: document.getElementById('darkModeBtn'),
             timeInput: document.getElementById('timeInput'),
             minInput: document.getElementById('minutesInput'),
             secInput: document.getElementById('secondsInput'),
@@ -452,7 +646,9 @@
             xpValue: document.getElementById('xpValue'),
             modal: document.getElementById('historyModal'),
             closeModal: document.getElementById('closeModal'),
-            historyList: document.getElementById('historyList')
+            historyList: document.getElementById('historyList'),
+            controls: document.querySelector('.controls'),
+            focusArea: document.querySelector('.focus-area')
         };
 
         let timerInterval = null;
@@ -466,17 +662,56 @@
             }
         });
 
+        // --- KEYBOARD CONTROLS ---
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !els.timeInput.classList.contains('active')) {
+                e.preventDefault();
+                toggleTimer();
+            }
+        });
+
         // --- INITIALIZATION ---
         function init() {
-            applyTheme(state.theme);
+            applyTheme(state.theme, state.palette);
             loadTimerState();
             renderTime();
             
             // UI Listeners
             els.startBtn.addEventListener('click', toggleTimer);
             els.resetBtn.addEventListener('click', resetTimer);
-            els.themeBtn.addEventListener('click', toggleTheme);
-            els.timerDisplay.addEventListener('click', editTime);
+            els.themeBtn.addEventListener('click', toggleThemePopup);
+            
+            // Timer display: tap to play/pause when running, double-tap to edit when idle
+            let tapCount = 0;
+            let tapTimer = null;
+            els.timerDisplay.addEventListener('click', (e) => {
+                if (state.isRunning || state.isPaused) {
+                    toggleTimer();
+                } else {
+                    tapCount++;
+                    if (tapCount === 1) {
+                        tapTimer = setTimeout(() => {
+                            tapCount = 0;
+                        }, 300);
+                    } else if (tapCount === 2) {
+                        clearTimeout(tapTimer);
+                        tapCount = 0;
+                        editTime();
+                    }
+                }
+            });
+            
+            // Theme popup listeners
+            els.lightModeBtn.addEventListener('click', () => setThemeMode('light'));
+            els.darkModeBtn.addEventListener('click', () => setThemeMode('dark'));
+            document.querySelectorAll('.palette-btn').forEach(btn => {
+                btn.addEventListener('click', () => setPalette(btn.dataset.palette));
+            });
+            document.addEventListener('click', (e) => {
+                if (!els.themePopup.contains(e.target) && !els.themeBtn.contains(e.target)) {
+                    els.themePopup.classList.remove('open');
+                }
+            });
             
             [els.minInput, els.secInput].forEach(input => {
                 input.addEventListener('blur', saveEditedTime);
@@ -490,27 +725,45 @@
             els.modal.addEventListener('click', (e) => {
                 if (e.target === els.modal) closeHistory();
             });
+            
+            // Tab switching
+            document.getElementById('tab-sessions').addEventListener('click', () => {
+                document.getElementById('tab-sessions').style.background = 'var(--accent-color)';
+                document.getElementById('tab-sessions').style.color = 'white';
+                document.getElementById('tab-daily').style.background = 'transparent';
+                document.getElementById('tab-daily').style.color = 'var(--text-secondary)';
+                els.historyList.style.display = 'flex';
+                document.getElementById('dailyList').style.display = 'none';
+            });
+            
+            document.getElementById('tab-daily').addEventListener('click', () => {
+                document.getElementById('tab-daily').style.background = 'var(--accent-color)';
+                document.getElementById('tab-daily').style.color = 'white';
+                document.getElementById('tab-sessions').style.background = 'transparent';
+                document.getElementById('tab-sessions').style.color = 'var(--text-secondary)';
+                document.getElementById('dailyList').style.display = 'flex';
+                els.historyList.style.display = 'none';
+            });
 
             // Firebase Auth (Canvas Compatible)
-            initAuth();
+            setupAuthListener();
         }
 
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
+        const setupAuthListener = () => {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    currentUser = user;
+                    updateUserStatus('syncing');
+                    setupRealtimeSync(user.uid);
+                } else {
+                    currentUser = null;
+                    updateUserStatus('offline');
+                    setTimeout(() => {
+                        if (!auth.currentUser) window.location.href = 'login.html';
+                    }, 1000);
+                }
+            });
         };
-
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                currentUser = user;
-                setupRealtimeSync(user.uid);
-            } else {
-                els.xpValue.innerText = "...";
-            }
-        });
 
         // --- FIRESTORE SYNC ---
         function setupRealtimeSync(uid) {
@@ -527,6 +780,10 @@
                     state.currentXP = 0;
                     animateXP(0);
                 }
+                updateUserStatus('synced');
+            }, (error) => {
+                console.error('Sync error:', error);
+                updateUserStatus('offline');
             });
         }
 
@@ -537,6 +794,7 @@
         async function saveSession(durationSeconds) {
             if (!currentUser) return;
             
+            updateUserStatus('syncing');
             const minutes = Math.floor(durationSeconds / 60);
             if (minutes < 1) return; 
 
@@ -578,10 +836,12 @@
                     history: arrayUnion(historyEntry)
                 }, { merge: true });
 
-                els.timerLabel.innerText = `+${xpEarned} XS | Saved to Grid`;
+                els.timerLabel.innerText = `+${xpEarned} XS | Gotham Protected`;
+                updateUserStatus('synced');
             } catch (e) {
                 console.error("Save failed:", e);
                 els.timerLabel.innerText = "Error Saving";
+                updateUserStatus('offline');
             }
         }
 
@@ -592,13 +852,23 @@
 
             const uid = currentUser.uid;
             const gamificationRef = doc(db, 'artifacts', appId, 'users', uid, 'gamification', 'stats');
+            const challengeRef = doc(db, 'artifacts', appId, 'users', uid, 'tracker_data', 'v3_challenge_history');
             
             try {
+                // Load sessions
                 const docSnap = await getDoc(gamificationRef);
                 if (docSnap.exists() && docSnap.data().history) {
                     renderHistoryList(docSnap.data().history);
                 } else {
-                    els.historyList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-secondary)">No sacrifices made yet.</div>';
+                    els.historyList.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-secondary)">No vigilante missions yet.</div>';
+                }
+                
+                // Load daily hours
+                const challengeSnap = await getDoc(challengeRef);
+                if (challengeSnap.exists() && challengeSnap.data().history) {
+                    renderDailyList(challengeSnap.data().history);
+                } else {
+                    document.getElementById('dailyList').innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-secondary)">No daily hours logged yet.</div>';
                 }
             } catch (e) {
                 console.error("Fetch history error", e);
@@ -623,6 +893,30 @@
                     <span class="history-val">+${entry.xp} XS</span>
                 `;
                 els.historyList.appendChild(div);
+            });
+        }
+        
+        function renderDailyList(historyObj) {
+            const dailyList = document.getElementById('dailyList');
+            dailyList.innerHTML = '';
+            
+            // Convert to array and sort by date (newest first)
+            const entries = Object.entries(historyObj)
+                .map(([date, hours]) => ({ date, hours }))
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+            
+            entries.forEach(entry => {
+                const date = new Date(entry.date + 'T00:00:00');
+                const dateStr = date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+                const hours = Math.round(entry.hours * 10) / 10; // Round to 1 decimal
+
+                const div = document.createElement('div');
+                div.className = 'history-item';
+                div.innerHTML = `
+                    <span class="history-date">${dateStr}</span>
+                    <span class="history-val">${hours}h</span>
+                `;
+                dailyList.appendChild(div);
             });
         }
 
@@ -755,18 +1049,27 @@
             els.playIcon.style.display = status === 'running' ? 'none' : 'block';
             els.pauseIcon.style.display = status === 'running' ? 'block' : 'none';
 
+            // Hide controls and center timer when running
+            if (status === 'running') {
+                els.controls.classList.add('hidden');
+                els.focusArea.classList.add('centered');
+            } else {
+                els.controls.classList.remove('hidden');
+                els.focusArea.classList.remove('centered');
+            }
+
             if (status === 'idle') {
                 els.resetBtn.style.opacity = '0';
                 els.resetBtn.style.pointerEvents = 'none';
-                els.timerLabel.innerText = "Tap time to edit";
+                els.timerLabel.innerText = "I am vengeance, I am the night";
             } else {
                 els.resetBtn.style.opacity = '1';
                 els.resetBtn.style.pointerEvents = 'auto';
             }
 
-            if (status === 'running') els.timerLabel.innerText = "Focusing...";
-            if (status === 'paused') els.timerLabel.innerText = "Paused";
-            if (status === 'complete') els.timerLabel.innerText = "Completed"; 
+            if (status === 'running') els.timerLabel.innerText = "Protecting Gotham...";
+            if (status === 'paused') els.timerLabel.innerText = "Batman never rests";
+            if (status === 'complete') els.timerLabel.innerText = "Mission Accomplished"; 
             
             if (status === 'running') els.timerDisplay.classList.add('breathing');
             else els.timerDisplay.classList.remove('breathing');
@@ -835,14 +1138,35 @@
         }
 
         // --- THEME ---
-        function toggleTheme() {
-            state.theme = state.theme === 'light' ? 'dark' : 'light';
-            localStorage.setItem('zen_theme', state.theme);
-            applyTheme(state.theme);
+        function toggleThemePopup() {
+            els.themePopup.classList.toggle('open');
         }
 
-        function applyTheme(theme) {
+        function setThemeMode(mode) {
+            state.theme = mode;
+            localStorage.setItem('zen_theme', mode);
+            applyTheme(state.theme, state.palette);
+        }
+
+        function setPalette(palette) {
+            state.palette = palette;
+            localStorage.setItem('zen_palette', palette);
+            applyTheme(state.theme, state.palette);
+        }
+
+        function applyTheme(theme, palette) {
             document.documentElement.setAttribute('data-theme', theme);
+            document.documentElement.setAttribute('data-palette', palette);
+            
+            // Update mode buttons
+            els.lightModeBtn.classList.toggle('active', theme === 'light');
+            els.darkModeBtn.classList.toggle('active', theme === 'dark');
+            
+            // Update palette buttons
+            document.querySelectorAll('.palette-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.palette === palette);
+            });
+            
             const metaThemeColor = document.querySelector("meta[name=theme-color]");
             metaThemeColor.setAttribute("content", theme === 'dark' ? "#000000" : "#fffbeb");
         }
