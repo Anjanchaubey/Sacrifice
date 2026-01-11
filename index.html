@@ -435,6 +435,12 @@ body {
 
         // --- Save to Firestore ---
         window.saveData = async () => {
+            localStorage.setItem('challengeHistoryData', JSON.stringify({
+                history: window.state.history,
+                duration: window.state.duration,
+                darkMode: window.state.darkMode,
+                startDateStr: window.state.startDateStr
+            }));
             if (!window.state.user) return;
             updateUserStatus('syncing');
             try {
@@ -457,17 +463,35 @@ body {
                 onSnapshot(docRef, (snap) => {
                     if (snap.exists()) {
                         const data = snap.data();
-                        window.state.history = data.history || {};
+                        const localData = JSON.parse(localStorage.getItem('challengeHistoryData') || '{}');
+                        window.state.history = { ...localData.history, ...data.history } || {};
                         window.state.duration = data.duration || 400;
                         window.state.darkMode = data.darkMode !== undefined ? data.darkMode : false;
                         window.state.startDateStr = data.startDateStr || getLocalISODate(new Date());
                     } else {
-                        // Init new user
-                        window.state.startDateStr = getLocalISODate(new Date());
+                        const localData = JSON.parse(localStorage.getItem('challengeHistoryData') || '{}');
+                        if (localData.history) {
+                            window.state.history = localData.history;
+                            window.state.duration = localData.duration || 400;
+                            window.state.darkMode = localData.darkMode || false;
+                            window.state.startDateStr = localData.startDateStr || getLocalISODate(new Date());
+                        } else {
+                            window.state.startDateStr = getLocalISODate(new Date());
+                        }
                         window.saveData();
                     }
                     renderAll();
                     updateUserStatus('synced');
+                }, (error) => {
+                    updateUserStatus('offline');
+                    const localData = JSON.parse(localStorage.getItem('challengeHistoryData') || '{}');
+                    if (localData.history) {
+                        window.state.history = localData.history;
+                        window.state.duration = localData.duration || 400;
+                        window.state.darkMode = localData.darkMode || false;
+                        window.state.startDateStr = localData.startDateStr || getLocalISODate(new Date());
+                        renderAll();
+                    }
                 });
             } else {
                 updateUserStatus('offline');
