@@ -60,9 +60,77 @@ body {
             transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
             transition-duration: 300ms;
         }
+
+        /* Splash Screen */
+        #splash-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease;
+        }
+        .dark #splash-screen {
+            background: linear-gradient(135deg, #000000 0%, #1a1a1a 100%);
+        }
+        #splash-screen.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+        #splash-logo {
+            width: 120px;
+            height: 120px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+
+        /* Grid Color Shading */
+        .grid-block {
+            width: 100%;
+            padding-top: 100%; /* Makes the block square */
+            position: relative;
+        }
+        .grid-block div {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 0.5rem;
+        }
+        .hours-2 {
+            background-color: #fde047; /* Yellowish */
+        }
+        .hours-4 {
+            background-color: #c084fc; /* Purplish */
+        }
+        .hours-6 {
+            background-color: #22d3ee; /* Neon cyan */
+        }
+        .hours-8 {
+            background-color: #22c55e; /* Greenish */
+        }
+        .hours-more {
+            background: linear-gradient(135deg, #ec4899, #8b5cf6); /* Brighter gradient */
+        }
     </style>
 </head>
 <body class="text-slate-800 dark:text-amber-300 font-sans pb-20 selection:bg-amber-400 selection:text-black transition-colors duration-500">
+
+    <!-- Splash Screen -->
+    <div id="splash-screen">
+        <img id="splash-logo" src="logo.png" alt="Caffine">
+        <h1 class="text-2xl font-bold text-amber-600 dark:text-amber-400 mt-4">Caffine</h1>
+    </div>
 
     <!-- App Container -->
     <div id="app" class="max-w-5xl mx-auto px-4 pt-6 md:px-12 md:pt-12">
@@ -138,10 +206,11 @@ body {
             <!-- Legend -->
             <div class="mt-8 pt-6 border-t border-amber-100 dark:border-amber-800 flex overflow-x-auto pb-2 scrollbar-hide items-center md:justify-center gap-6 text-[10px] md:text-xs text-slate-500 dark:text-amber-400 font-semibold whitespace-nowrap">
                 <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-amber-100 dark:bg-amber-800"></div><span>0h</span></div>
-                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-amber-200 dark:bg-amber-700"></div><span>1-3h</span></div>
-                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-amber-300 dark:bg-amber-600"></div><span>4-6h</span></div>
-                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-amber-400 dark:bg-amber-600"></div><span>7-9h</span></div>
-                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-amber-500 dark:bg-amber-600"></div><span>10-14h</span></div>
+                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-yellow-300"></div><span>1-2h</span></div>
+                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-purple-400"></div><span>3-4h</span></div>
+                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-cyan-400"></div><span>5-6h</span></div>
+                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-green-500"></div><span>7-8h</span></div>
+                <div class="flex items-center gap-2"><div class="w-3 h-3 rounded-full bg-gradient-to-r from-pink-500 to-violet-600"></div><span>9h+</span></div>
             </div>
         </div>
 
@@ -426,9 +495,9 @@ body {
         function renderStreakCard() {
             const streaks = calculateStreaks();
             const types = [
-                { label: "Active Streak", value: streaks.any, icon: "flame", color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-950/20" },
-                { label: "5+ Hour Streak", value: streaks.medium, icon: "sparkles", color: "text-purple-500", bg: "bg-purple-50 dark:bg-purple-950/20" },
-                { label: "Deep Work Streak", value: streaks.deep, icon: "trophy", color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-950/20" }
+                { label: "Vigilante Streak", value: streaks.any, icon: "flame", color: "text-orange-500", bg: "bg-orange-50 dark:bg-orange-950/20" },
+                { label: "Batcave Sessions", value: streaks.medium, icon: "sparkles", color: "text-purple-500", bg: "bg-purple-50 dark:bg-purple-950/20" },
+                { label: "Dark Knight Streak", value: streaks.deep, icon: "trophy", color: "text-indigo-500", bg: "bg-indigo-50 dark:bg-indigo-950/20" }
             ];
             
             const current = types[streakIndex];
@@ -480,22 +549,25 @@ body {
                 // Color Logic
                 let colorClass = "bg-amber-100 dark:bg-amber-900 border-amber-200 dark:border-amber-800 text-transparent";
                 if (hours > 0) {
-                     if (hours <= 3) colorClass = "bg-amber-200 dark:bg-amber-800 border-amber-300 dark:border-amber-700 text-amber-900 dark:text-amber-100";
-                     else if (hours <= 6) colorClass = "bg-amber-300 dark:bg-amber-600 border-amber-400 dark:border-amber-700 text-amber-950 dark:text-white shadow-[0_4px_12px_rgba(245,158,11,0.3)] dark:shadow-none";
-                     else if (hours <= 9) colorClass = "bg-amber-400 dark:bg-amber-600 border-amber-500 dark:border-amber-700 text-white shadow-[0_4px_12px_rgba(245,158,11,0.4)] dark:shadow-none";
-                     else colorClass = "bg-amber-500 dark:bg-amber-600 border-amber-600 dark:border-amber-700 text-white shadow-[0_4px_12px_rgba(245,158,11,0.4)] dark:shadow-none";
+                     if (hours <= 2) colorClass = "bg-yellow-300 border-yellow-400 text-yellow-900 shadow-[0_4px_12px_rgba(251,191,36,0.3)]";
+                     else if (hours <= 4) colorClass = "bg-purple-400 border-purple-500 text-white shadow-[0_4px_12px_rgba(168,85,247,0.4)]";
+                     else if (hours <= 6) colorClass = "bg-cyan-400 border-cyan-500 text-cyan-900 shadow-[0_4px_12px_rgba(34,211,238,0.4)]";
+                     else if (hours <= 8) colorClass = "bg-green-500 border-green-600 text-white shadow-[0_4px_12px_rgba(34,197,94,0.4)]";
+                     else if (hours <= 10) colorClass = "bg-blue-500 border-blue-600 text-white shadow-[0_4px_12px_rgba(59,130,246,0.5)]";
+                     else if (hours <= 12) colorClass = "bg-indigo-600 border-indigo-700 text-white shadow-[0_4px_12px_rgba(99,102,241,0.5)]";
+                     else colorClass = "bg-gradient-to-r from-pink-500 to-violet-600 border-pink-600 text-white shadow-[0_4px_16px_rgba(236,72,153,0.6)]";
                 }
 
                 const btn = document.createElement('button');
                 btn.className = `
                     group relative w-full aspect-square rounded-md md:rounded-lg border-b-[3px] md:border-b-4 
-                    transition-all duration-200 ease-out touch-manipulation
+                    ease-out touch-manipulation
                     flex items-center justify-center font-bold text-xs md:text-sm
                     focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-400 dark:focus:ring-offset-black
                     ${hours === 0 ? 'translate-y-0' : '-translate-y-[2px]'}
                     ${colorClass}
                     ${isToday ? 'ring-2 ring-offset-2 ring-amber-300 dark:ring-amber-400 animate-pulse-slow z-10' : ''}
-                    ${isFuture ? 'opacity-30 cursor-not-allowed' : 'hover:bg-amber-200 dark:hover:bg-amber-800'}
+                    ${isFuture ? 'opacity-30 cursor-not-allowed' : ''}
                     active:border-b-0 active:translate-y-[2px]
                 `;
 
@@ -503,7 +575,18 @@ body {
                 if (!isToday && hours === 0) {
                     btn.innerHTML = `<i data-lucide="lock" width="8" height="8" class="text-amber-300 dark:text-amber-700 absolute"></i>`;
                 } else if (hours > 0) {
-                    btn.innerHTML = `<span class="pointer-events-none select-none">${hours}</span>`;
+                    if (hours > 8) {
+                        btn.innerHTML = `
+                            <div class="relative flex flex-col items-center">
+                                <svg class="w-3 h-3 text-yellow-400 mb-0.5" fill="currentColor" viewBox="0 0 24 24">
+                                    <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+                                </svg>
+                                <span class="pointer-events-none select-none text-xs font-bold">${hours}</span>
+                            </div>
+                        `;
+                    } else {
+                        btn.innerHTML = `<span class="pointer-events-none select-none">${hours}</span>`;
+                    }
                 }
 
                 // Interactions
@@ -604,9 +687,27 @@ body {
             if (hours === 0) {
                 hoursBox.className = "relative w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-inner transition-colors duration-300 bg-amber-100 dark:bg-amber-900 text-amber-400 dark:text-amber-500";
                 textDesc.textContent = "No Activity";
+            } else if (hours <= 2) {
+                hoursBox.className = "relative w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-inner transition-colors duration-300 bg-yellow-300 text-yellow-900";
+                textDesc.textContent = "Robin's Training";
+            } else if (hours <= 4) {
+                hoursBox.className = "relative w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-inner transition-colors duration-300 bg-purple-400 text-white";
+                textDesc.textContent = "Nightwing Mode";
+            } else if (hours <= 6) {
+                hoursBox.className = "relative w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-inner transition-colors duration-300 bg-cyan-400 text-cyan-900";
+                textDesc.textContent = "Batcave Focus";
+            } else if (hours <= 8) {
+                hoursBox.className = "relative w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-inner transition-colors duration-300 bg-green-500 text-white";
+                textDesc.textContent = "Dark Knight";
+            } else if (hours <= 10) {
+                hoursBox.className = "relative w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-inner transition-colors duration-300 bg-blue-500 text-white";
+                textDesc.textContent = "Gotham Guardian";
+            } else if (hours <= 12) {
+                hoursBox.className = "relative w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-inner transition-colors duration-300 bg-indigo-600 text-white";
+                textDesc.textContent = "World's Greatest Detective";
             } else {
-                hoursBox.className = "relative w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-inner transition-colors duration-300 bg-amber-400 text-white";
-                textDesc.textContent = hours < 4 ? "Light Session" : hours < 8 ? "Solid Progress" : "Deep Work";
+                hoursBox.className = "relative w-16 h-16 rounded-2xl flex items-center justify-center text-3xl font-bold shadow-inner transition-colors duration-300 bg-gradient-to-r from-pink-500 to-violet-600 text-white";
+                textDesc.textContent = "Justice League Level";
             }
 
             // Progress Bar
@@ -673,6 +774,14 @@ body {
         };
         document.getElementById('theme-toggle-mobile').onclick = toggleTheme;
         document.getElementById('theme-toggle-desktop').onclick = toggleTheme;
+
+        // Splash Screen
+        setTimeout(() => {
+            document.getElementById('splash-screen').classList.add('fade-out');
+            setTimeout(() => {
+                document.getElementById('splash-screen').style.display = 'none';
+            }, 500);
+        }, 2000);
 
     </script>
 
