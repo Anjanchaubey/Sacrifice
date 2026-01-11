@@ -262,7 +262,7 @@
 
         <div class="mt-12 text-center">
             <p class="text-[9px] md:text-[10px] font-medium uppercase tracking-widest text-slate-400 dark:text-gray-600">
-                Synching to Cloud <span class="mx-1">•</span> AspireHub
+                "I am vengeance, I am the night" <span class="mx-1">•</span> Wayne Enterprises
             </p>
         </div>
 
@@ -271,7 +271,7 @@
     <!-- Firebase Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -280,18 +280,17 @@
             projectId: "aspirehub-32863",
             storageBucket: "aspirehub-32863.appspot.com",
             messagingSenderId: "686810111182",
-            appId: "1:686810111182:web:4290b4b1b6e64934ec449f",
-            measurementId: "G-KX41R0SSMY",
-            databaseURL: "https://aspirehub-32863-default-rtdb.asia-southeast1.firebasedatabase.app"
+            appId: "1:686810111182:web:4290b4b1b6e64934ec449f"
         };
-
+        
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'syllabus-tracker-v1';
+        const appId = 'syllabus-tracker-v1';
 
         let currentUser = null;
         let unsubscribe = null;
+        let userDataListener = null;
 
         const statusDot = document.getElementById('sync-status-dot');
         const statusText = document.getElementById('sync-status-text');
@@ -309,11 +308,7 @@
             }
         }
 
-        signInAnonymously(auth).catch((error) => {
-            console.error("Auth Error:", error);
-            setStatus('offline');
-        });
-
+        // Listen for authentication
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
@@ -322,7 +317,9 @@
             } else {
                 currentUser = null;
                 setStatus('offline');
-                if (unsubscribe) unsubscribe();
+                setTimeout(() => {
+                    if (!auth.currentUser) window.location.href = 'login.html';
+                }, 1000);
             }
         });
 
@@ -506,13 +503,13 @@
 
             // Rank Logic
             const rankEl = document.getElementById('user-rank');
-            if(globalPercent === 0) rankEl.innerText = "Novice";
-            else if(globalPercent < 25) rankEl.innerText = "Aspirant";
-            else if(globalPercent < 50) rankEl.innerText = "Scholar";
-            else if(globalPercent < 75) rankEl.innerText = "Master";
-            else if(globalPercent < 100) rankEl.innerText = "Grandmaster";
+            if(globalPercent === 0) rankEl.innerText = "Robin";
+            else if(globalPercent < 25) rankEl.innerText = "Nightwing";
+            else if(globalPercent < 50) rankEl.innerText = "Red Hood";
+            else if(globalPercent < 75) rankEl.innerText = "Batman";
+            else if(globalPercent < 100) rankEl.innerText = "Dark Knight";
             else {
-                rankEl.innerText = "Legend";
+                rankEl.innerText = "Justice League";
                 if(!sessionStorage.getItem('confettiShown')) {
                     triggerConfetti();
                     sessionStorage.setItem('confettiShown', 'true');
@@ -532,7 +529,7 @@
             if(stats.physics.percent === stats.chemistry.percent && stats.chemistry.percent === stats.math.percent && stats.math.percent > 0) {
                 lagSubject = "Consistent";
             }
-            if(globalPercent === 100) lagSubject = "Revision";
+            if(globalPercent === 100) lagSubject = "Gotham Protected";
 
             document.getElementById('focus-area').innerText = lagSubject;
         }
