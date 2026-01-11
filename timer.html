@@ -159,8 +159,9 @@
             font-variant-numeric: tabular-nums;
             letter-spacing: -0.04em;
             cursor: pointer;
-            transition: opacity 0.3s ease;
+            transition: all 0.3s ease;
             user-select: none;
+            transform: scale(1);
         }
         
         @media (min-width: 768px) {
@@ -171,10 +172,14 @@
             font-size: 0.8rem;
             color: var(--text-secondary);
             font-weight: 400;
-            margin-top: 1rem;
             letter-spacing: 0.05em;
             opacity: 0.6;
             text-transform: uppercase;
+            position: absolute;
+            bottom: -2rem;
+            left: 50%;
+            transform: translateX(-50%);
+            white-space: nowrap;
         }
 
         /* Input mode for Timer */
@@ -458,9 +463,14 @@
     <div class="app-container">
         <!-- Header -->
         <header>
-            <button class="theme-toggle" id="themeBtn" aria-label="Theme Settings">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m9.66-9H16m-6 0H4m15.66 5.66l-4.24-4.24M8.58 8.58l-4.24-4.24m12.02 12.02l-4.24-4.24M8.58 15.42l-4.24 4.24"/></svg>
-            </button>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button onclick="window.location.href='index.html'" class="btn btn-secondary" aria-label="Back to Home" style="opacity: 0.7;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m12 19-7-7 7-7"/><path d="M19 12H5"/></svg>
+                </button>
+                <button class="theme-toggle" id="themeBtn" aria-label="Theme Settings">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v6m0 6v6m9.66-9H16m-6 0H4m15.66 5.66l-4.24-4.24M8.58 8.58l-4.24-4.24m12.02 12.02l-4.24-4.24M8.58 15.42l-4.24 4.24"/></svg>
+                </button>
+            </div>
             
             <div class="flex items-center gap-4">
                 <!-- User Status -->
@@ -479,15 +489,16 @@
         <div class="focus-area">
             
             <!-- Digital Timer -->
-            <div class="timer-display" id="timerDisplay">25:00</div>
+            <div style="position: relative; display: inline-block;">
+                <div class="timer-display" id="timerDisplay">25:00</div>
+                <div class="timer-label" id="timerLabel">The Dark Knight Rises</div>
+            </div>
             
             <!-- Time Input (Hidden by default) -->
             <div class="time-input-container" id="timeInput">
                 <input type="number" id="minutesInput" value="25" min="1" max="180">
                 <input type="number" id="secondsInput" value="00" min="0" max="59">
             </div>
-
-            <div class="timer-label" id="timerLabel">The Dark Knight Rises</div>
         </div>
 
         <!-- Controls -->
@@ -503,8 +514,6 @@
                     <svg id="playIcon" viewBox="0 0 24 24"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
                     <svg id="pauseIcon" viewBox="0 0 24 24" style="display: none;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>
                 </button>
-                
-                <div style="width: 48px"></div>
             </div>
         </div>
     </div>
@@ -625,7 +634,8 @@
             isPaused: false,
             theme: localStorage.getItem('zen_theme') || 'dark',
             palette: localStorage.getItem('zen_palette') || 'amber',
-            currentXP: 0
+            currentXP: 0,
+            timerScale: parseFloat(localStorage.getItem('timerScale')) || 1
         };
 
         const els = {
@@ -668,11 +678,24 @@
                 e.preventDefault();
                 toggleTimer();
             }
+            if (e.code === 'Equal' || e.code === 'NumpadAdd') {
+                e.preventDefault();
+                increaseTimerSize();
+            }
+            if (e.code === 'Minus' || e.code === 'NumpadSubtract') {
+                e.preventDefault();
+                decreaseTimerSize();
+            }
+            if (e.code === 'KeyF') {
+                e.preventDefault();
+                toggleFullscreen();
+            }
         });
 
         // --- INITIALIZATION ---
         function init() {
             applyTheme(state.theme, state.palette);
+            applyTimerScale();
             loadTimerState();
             renderTime();
             
@@ -766,6 +789,43 @@
         };
 
         // --- FIRESTORE SYNC ---
+        
+        // Offline queue for pending sessions
+        function getOfflineQueue() {
+            return JSON.parse(localStorage.getItem('offlineQueue') || '[]');
+        }
+        
+        function addToOfflineQueue(sessionData) {
+            const queue = getOfflineQueue();
+            queue.push(sessionData);
+            localStorage.setItem('offlineQueue', JSON.stringify(queue));
+        }
+        
+        async function syncOfflineQueue() {
+            const queue = getOfflineQueue();
+            if (queue.length === 0 || !currentUser) return;
+            
+            updateUserStatus('syncing');
+            const uid = currentUser.uid;
+            
+            for (const session of queue) {
+                try {
+                    const studyFlowRef = doc(db, 'artifacts', appId, 'users', uid, 'tracker_data', 'v3_challenge_history');
+                    const gamificationRef = doc(db, 'artifacts', appId, 'users', uid, 'gamification', 'stats');
+                    
+                    await setDoc(studyFlowRef, session.studyFlowUpdate, { merge: true });
+                    await setDoc(gamificationRef, session.gamificationUpdate, { merge: true });
+                } catch (e) {
+                    console.error('Sync queue error:', e);
+                    updateUserStatus('offline');
+                    return;
+                }
+            }
+            
+            localStorage.removeItem('offlineQueue');
+            updateUserStatus('synced');
+        }
+        
         function setupRealtimeSync(uid) {
             // XP lives in a 'gamification' sub-collection or similar
             // We'll keep XP simple in 'gamification/stats'
@@ -775,12 +835,21 @@
                 if (docSnap.exists()) {
                     const data = docSnap.data();
                     state.currentXP = data.totalXS || 0;
+                    
+                    // Load from localStorage if offline
+                    const localXP = parseInt(localStorage.getItem('localXP') || '0');
+                    if (localXP > state.currentXP) {
+                        state.currentXP = localXP;
+                    }
+                    
                     animateXP(state.currentXP);
                 } else {
-                    state.currentXP = 0;
-                    animateXP(0);
+                    const localXP = parseInt(localStorage.getItem('localXP') || '0');
+                    state.currentXP = localXP;
+                    animateXP(localXP);
                 }
                 updateUserStatus('synced');
+                syncOfflineQueue();
             }, (error) => {
                 console.error('Sync error:', error);
                 updateUserStatus('offline');
@@ -792,55 +861,61 @@
         }
 
         async function saveSession(durationSeconds) {
-            if (!currentUser) return;
-            
-            updateUserStatus('syncing');
             const minutes = Math.floor(durationSeconds / 60);
-            if (minutes < 1) return; 
+            if (minutes < 1) return;
 
-            // 1. Calculate Data
-            const xpEarned = minutes * 2; 
+            const xpEarned = minutes * 2;
             const hoursEarned = durationSeconds / 3600;
-            const uid = currentUser.uid;
             
-            // Get local ISO date string "YYYY-MM-DD"
             const date = new Date();
             const offset = date.getTimezoneOffset() * 60000;
             const localDate = new Date(date.getTime() - offset);
             const todayStr = localDate.toISOString().split('T')[0];
 
-            // 2. Update Study Flow Data (tracker_data/v3_challenge_history)
-            // This is the critical link requested by the user
-            const studyFlowRef = doc(db, 'artifacts', appId, 'users', uid, 'tracker_data', 'v3_challenge_history');
-            
-            // Using dot notation to update a specific key in the history map
-            const studyFlowUpdate = {
-                [`history.${todayStr}`]: increment(hoursEarned)
-            };
-            
-            // 3. Update XP & History List (gamification/stats)
-            const gamificationRef = doc(db, 'artifacts', appId, 'users', uid, 'gamification', 'stats');
             const historyEntry = {
                 date: new Date().toISOString(),
                 duration: durationSeconds,
                 xp: xpEarned
             };
             
+            // Save to localStorage immediately
+            state.currentXP += xpEarned;
+            localStorage.setItem('localXP', state.currentXP.toString());
+            animateXP(state.currentXP);
+            
+            const localHistory = JSON.parse(localStorage.getItem('localHistory') || '[]');
+            localHistory.push(historyEntry);
+            localStorage.setItem('localHistory', JSON.stringify(localHistory));
+            
+            if (!currentUser) {
+                els.timerLabel.innerText = `+${xpEarned} XS | Saved Offline`;
+                return;
+            }
+            
+            updateUserStatus('syncing');
+            const uid = currentUser.uid;
+            
+            const studyFlowRef = doc(db, 'artifacts', appId, 'users', uid, 'tracker_data', 'v3_challenge_history');
+            const gamificationRef = doc(db, 'artifacts', appId, 'users', uid, 'gamification', 'stats');
+            
+            const studyFlowUpdate = {
+                [`history.${todayStr}`]: increment(hoursEarned)
+            };
+            
+            const gamificationUpdate = {
+                totalXS: increment(xpEarned),
+                history: arrayUnion(historyEntry)
+            };
+            
             try {
-                // Execute updates
-                // Note: using setDoc with merge: true ensures document creation if missing
                 await setDoc(studyFlowRef, studyFlowUpdate, { merge: true });
-                
-                await setDoc(gamificationRef, {
-                    totalXS: increment(xpEarned),
-                    history: arrayUnion(historyEntry)
-                }, { merge: true });
-
-                els.timerLabel.innerText = `+${xpEarned} XS | Gotham Protected`;
+                await setDoc(gamificationRef, gamificationUpdate, { merge: true });
+                els.timerLabel.innerText = `+${xpEarned} XS | Synced`;
                 updateUserStatus('synced');
             } catch (e) {
                 console.error("Save failed:", e);
-                els.timerLabel.innerText = "Error Saving";
+                addToOfflineQueue({ studyFlowUpdate, gamificationUpdate });
+                els.timerLabel.innerText = `+${xpEarned} XS | Saved Offline`;
                 updateUserStatus('offline');
             }
         }
@@ -848,6 +923,13 @@
         // --- HISTORY DISPLAY ---
         async function openHistory() {
             els.modal.classList.add('open');
+            
+            // Load local history first
+            const localHistory = JSON.parse(localStorage.getItem('localHistory') || '[]');
+            if (localHistory.length > 0) {
+                renderHistoryList(localHistory);
+            }
+            
             if (!currentUser) return;
 
             const uid = currentUser.uid;
@@ -1169,6 +1251,35 @@
             
             const metaThemeColor = document.querySelector("meta[name=theme-color]");
             metaThemeColor.setAttribute("content", theme === 'dark' ? "#000000" : "#fffbeb");
+        }
+
+        function applyTimerScale() {
+            const timerContainer = els.timerDisplay.parentElement;
+            timerContainer.style.transform = `scale(${state.timerScale})`;
+        }
+
+        function increaseTimerSize() {
+            if (state.timerScale < 3) {
+                state.timerScale = Math.min(3, state.timerScale + 0.15);
+                localStorage.setItem('timerScale', state.timerScale);
+                applyTimerScale();
+            }
+        }
+
+        function decreaseTimerSize() {
+            if (state.timerScale > 1) {
+                state.timerScale = Math.max(1, state.timerScale - 0.15);
+                localStorage.setItem('timerScale', state.timerScale);
+                applyTimerScale();
+            }
+        }
+
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
         }
 
         // Start
