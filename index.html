@@ -143,15 +143,26 @@ body {
                         <img src="logo.png" alt="Caffine" class="w-16 h-16 stroke-[2.5px]">
                         Caffine
                     </h1>
-                    <p id="start-date-display" class="text-slate-700 dark:text-amber-200 text-sm font-medium mt-1">
-                        Loading...
-                    </p>
+                    <div class="flex items-center gap-3">
+                        <p id="start-date-display" class="text-slate-700 dark:text-amber-200 text-sm font-medium">
+                            Loading...
+                        </p>
+                        <div class="flex items-center gap-2">
+                            <div id="user-status-dot" class="w-2 h-2 rounded-full bg-slate-300 transition-colors"></div>
+                            <span id="user-status-text" class="text-xs text-slate-500 dark:text-slate-400">Offline</span>
+                        </div>
+                    </div>
                 </div>
-                <!-- Mobile Theme Toggle -->
-                <button id="theme-toggle-mobile" class="md:hidden p-2.5 rounded-full bg-amber-100 dark:bg-amber-900 text-slate-600 dark:text-amber-300 active:scale-95 transition-transform">
-                    <i data-lucide="moon" class="dark:hidden"></i>
-                    <i data-lucide="sun" class="hidden dark:block"></i>
-                </button>
+                <!-- Mobile Theme Toggle and Profile -->
+                <div class="md:hidden flex gap-2">
+                    <button id="theme-toggle-mobile" class="p-2.5 rounded-full bg-amber-100 dark:bg-amber-900 text-slate-600 dark:text-amber-300 active:scale-95 transition-transform">
+                        <i data-lucide="moon" class="dark:hidden"></i>
+                        <i data-lucide="sun" class="hidden dark:block"></i>
+                    </button>
+                    <button id="profile-btn-mobile" class="p-2.5 rounded-full bg-amber-100 dark:bg-amber-900 text-slate-600 dark:text-amber-300 active:scale-95 transition-transform">
+                        <i data-lucide="user"></i>
+                    </button>
+                </div>
             </div>
 
             <div class="flex flex-col-reverse md:flex-row md:items-center gap-4">
@@ -164,6 +175,9 @@ body {
                     <button id="theme-toggle-desktop" class="p-3 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900 transition-colors text-slate-600 dark:text-amber-300" title="Toggle Theme">
                         <i data-lucide="moon" class="dark:hidden"></i>
                         <i data-lucide="sun" class="hidden dark:block"></i>
+                    </button>
+                    <button id="profile-btn" class="p-3 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900 transition-colors text-slate-600 dark:text-amber-300" title="Profile">
+                        <i data-lucide="user"></i>
                     </button>
                 </div>
             </div>
@@ -216,6 +230,45 @@ body {
 
         <div class="mt-6 text-center text-slate-400 dark:text-amber-500 text-xs font-medium md:hidden">
             Long press any block for details
+        </div>
+    </div>
+
+    <!-- Profile Modal -->
+    <div id="profile-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4">
+        <div class="bg-white dark:bg-black w-full max-w-sm p-6 rounded-3xl shadow-2xl border border-amber-100 dark:border-amber-800">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-bold text-slate-900 dark:text-amber-300">Profile</h3>
+                <button id="close-profile" class="p-2 hover:bg-amber-100 dark:hover:bg-amber-800 rounded-full transition-colors">
+                    <i data-lucide="x" class="text-slate-500 dark:text-amber-300 w-5 h-5"></i>
+                </button>
+            </div>
+            
+            <div class="space-y-4">
+                <div class="flex items-center gap-3 p-4 bg-amber-50 dark:bg-amber-950/20 rounded-xl">
+                    <div class="w-12 h-12 rounded-full bg-amber-500 flex items-center justify-center text-white font-bold text-lg">
+                        <i data-lucide="user" class="w-6 h-6"></i>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs text-slate-500 dark:text-amber-400 font-medium">Email</p>
+                        <p id="user-email" class="text-sm font-semibold text-slate-900 dark:text-amber-300 truncate">Loading...</p>
+                    </div>
+                </div>
+
+                <button id="theme-toggle-profile" class="w-full flex items-center justify-between p-4 bg-amber-50 dark:bg-amber-950/20 rounded-xl hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="moon" class="w-5 h-5 text-slate-600 dark:text-amber-300"></i>
+                        <span class="text-sm font-medium text-slate-900 dark:text-amber-300">Toggle Theme</span>
+                    </div>
+                    <i data-lucide="chevron-right" class="w-4 h-4 text-slate-400"></i>
+                </button>
+
+                <button id="logout-btn" class="w-full flex items-center justify-between p-4 bg-red-50 dark:bg-red-950/20 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="log-out" class="w-5 h-5 text-red-600 dark:text-red-400"></i>
+                        <span class="text-sm font-medium text-red-600 dark:text-red-400">Logout</span>
+                    </div>
+                </button>
+            </div>
         </div>
     </div>
 
@@ -282,7 +335,7 @@ body {
     <!-- Application Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // --- Configuration ---
@@ -299,10 +352,56 @@ body {
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
-        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const appId = 'caffine-tracker-v1';
+        
+        // Auth functions
+        window.FirebaseAuth = {
+            login: async (email, password) => {
+                try {
+                    const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                    return { success: true, user: userCredential.user };
+                } catch (error) {
+                    return { success: false, error: error.message };
+                }
+            },
+            signup: async (email, password) => {
+                try {
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+                    return { success: true, user: userCredential.user };
+                } catch (error) {
+                    return { success: false, error: error.message };
+                }
+            },
+            logout: async () => {
+                try {
+                    await signOut(auth);
+                    return { success: true };
+                } catch (error) {
+                    return { success: false, error: error.message };
+                }
+            },
+            getCurrentUser: () => auth.currentUser
+        };
+        
+        // Status indicators
+        const statusDot = document.getElementById('user-status-dot');
+        const statusText = document.getElementById('user-status-text');
+        
+        function updateUserStatus(status) {
+            if (status === 'offline') {
+                statusDot.className = "w-2 h-2 rounded-full bg-slate-300 transition-colors";
+                statusText.textContent = "Offline";
+            } else if (status === 'syncing') {
+                statusDot.className = "w-2 h-2 rounded-full bg-amber-400 animate-pulse transition-colors";
+                statusText.textContent = "Syncing";
+            } else if (status === 'synced') {
+                statusDot.className = "w-2 h-2 rounded-full bg-emerald-500 transition-colors";
+                statusText.textContent = "Synced";
+            }
+        }
 
         // --- State ---
-        let state = {
+        window.state = {
             user: null,
             history: {}, // "YYYY-MM-DD": hours
             duration: 400,
@@ -335,47 +434,46 @@ body {
         };
 
         // --- Save to Firestore ---
-        const saveData = async () => {
-            if (!state.user) return;
+        window.saveData = async () => {
+            if (!window.state.user) return;
+            updateUserStatus('syncing');
             try {
-                await setDoc(doc(db, 'artifacts', appId, 'users', state.user.uid, 'tracker_data', 'v3_challenge_history'), {
-                    history: state.history,
-                    duration: state.duration,
-                    darkMode: state.darkMode,
-                    startDateStr: state.startDateStr
+                await setDoc(doc(db, 'artifacts', appId, 'users', window.state.user.uid, 'tracker_data', 'v3_challenge_history'), {
+                    history: window.state.history,
+                    duration: window.state.duration,
+                    darkMode: window.state.darkMode,
+                    startDateStr: window.state.startDateStr
                 }, { merge: true });
             } catch (e) { console.error("Save error", e); }
         };
 
         // --- Auth & Sync ---
-        const initAuth = async () => {
-            if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
-                await signInWithCustomToken(auth, __initial_auth_token);
-            } else {
-                await signInAnonymously(auth);
-            }
-        };
-        initAuth();
-
         onAuthStateChanged(auth, (u) => {
-            state.user = u;
+            window.state.user = u;
             if (u) {
+                updateUserStatus('syncing');
                 // Subscribe to data
                 const docRef = doc(db, 'artifacts', appId, 'users', u.uid, 'tracker_data', 'v3_challenge_history');
                 onSnapshot(docRef, (snap) => {
                     if (snap.exists()) {
                         const data = snap.data();
-                        state.history = data.history || {};
-                        state.duration = data.duration || 400;
-                        state.darkMode = data.darkMode !== undefined ? data.darkMode : false;
-                        state.startDateStr = data.startDateStr || getLocalISODate(new Date());
+                        window.state.history = data.history || {};
+                        window.state.duration = data.duration || 400;
+                        window.state.darkMode = data.darkMode !== undefined ? data.darkMode : false;
+                        window.state.startDateStr = data.startDateStr || getLocalISODate(new Date());
                     } else {
                         // Init new user
-                        state.startDateStr = getLocalISODate(new Date());
-                        saveData();
+                        window.state.startDateStr = getLocalISODate(new Date());
+                        window.saveData();
                     }
                     renderAll();
+                    updateUserStatus('synced');
                 });
+            } else {
+                updateUserStatus('offline');
+                setTimeout(() => {
+                    if (!auth.currentUser) window.location.href = 'login.html';
+                }, 1000);
             }
         });
 
@@ -389,12 +487,13 @@ body {
             if (popupState.isOpen) updatePopupContent(); // Live update popup if open
             lucide.createIcons();
         }
+        window.renderAll = renderAll;
 
         function applyTheme() {
             const html = document.documentElement;
             const body = document.body;
             
-            if (state.darkMode) {
+            if (window.state.darkMode) {
                 html.classList.add('dark');
                 body.classList.add('bg-black');
                 body.classList.remove('bg-slate-50');
@@ -408,8 +507,8 @@ body {
         function renderHeader() {
             // Start Date
             const dateEl = document.getElementById('start-date-display');
-            if (state.startDateStr) {
-                const [y, m, d] = state.startDateStr.split('-').map(Number);
+            if (window.state.startDateStr) {
+                const [y, m, d] = window.state.startDateStr.split('-').map(Number);
                 const startDate = new Date(y, m-1, d);
                 dateEl.textContent = `Started ${formatDate(startDate)}`;
             }
@@ -420,14 +519,14 @@ body {
             [30, 60, 90, 400].forEach(d => {
                 const btn = document.createElement('button');
                 btn.className = `flex-1 md:flex-none px-4 py-2 text-xs md:text-sm font-bold rounded-lg whitespace-nowrap transition-all ${
-                    state.duration === d 
+                    window.state.duration === d 
                     ? 'bg-white dark:bg-amber-800 shadow-sm text-amber-600 dark:text-white' 
                     : 'text-slate-500 dark:text-amber-400 hover:text-slate-700 dark:hover:text-amber-200'
                 }`;
                 btn.textContent = `${d} Days`;
                 btn.onclick = () => {
-                    state.duration = d;
-                    saveData(); // Save immediately triggers re-render via snapshot
+                    window.state.duration = d;
+                    window.saveData(); // Save immediately triggers re-render via snapshot
                 };
                 container.appendChild(btn);
             });
@@ -439,7 +538,7 @@ body {
             let checkDate = new Date();
             
             // If today is empty, check yesterday to preserve streak
-            if ((state.history[todayStr] || 0) === 0) {
+            if ((window.state.history[todayStr] || 0) === 0) {
                 checkDate.setDate(checkDate.getDate() - 1);
             }
 
@@ -449,7 +548,7 @@ body {
                 // Limit loop
                 for (let i=0; i<365; i++) {
                     const ds = getLocalISODate(d);
-                    if ((state.history[ds] || 0) >= threshold) {
+                    if ((window.state.history[ds] || 0) >= threshold) {
                         count++;
                         d.setDate(d.getDate() - 1);
                     } else {
@@ -472,8 +571,8 @@ body {
         
         function renderStats() {
             // Basic Stats
-            const totalHours = Object.values(state.history).reduce((a,b) => a+b, 0);
-            const daysLogged = Object.values(state.history).filter(h => h > 0).length;
+            const totalHours = Object.values(window.state.history).reduce((a,b) => a+b, 0);
+            const daysLogged = Object.values(window.state.history).filter(h => h > 0).length;
             
             document.getElementById('stat-total-hours').textContent = `${totalHours}h`;
             document.getElementById('stat-days-logged').textContent = daysLogged;
@@ -527,21 +626,21 @@ body {
             grid.innerHTML = '';
             
             // Layout Columns based on duration
-            const colSize = state.duration >= 365 ? '22px' : '38px';
+            const colSize = window.state.duration >= 365 ? '22px' : '38px';
             grid.style.gridTemplateColumns = `repeat(auto-fill, minmax(${colSize}, 1fr))`;
 
             // Generate Dates
-            if (!state.startDateStr) return;
-            const [y, m, d] = state.startDateStr.split('-').map(Number);
+            if (!window.state.startDateStr) return;
+            const [y, m, d] = window.state.startDateStr.split('-').map(Number);
             const start = new Date(y, m-1, d);
             const today = new Date();
             const todayIso = getLocalISODate(today);
 
-            for(let i=0; i<state.duration; i++) {
+            for(let i=0; i<window.state.duration; i++) {
                 const date = new Date(start);
                 date.setDate(start.getDate() + i);
                 const iso = getLocalISODate(date);
-                const hours = state.history[iso] || 0;
+                const hours = window.state.history[iso] || 0;
                 
                 const isToday = iso === todayIso;
                 const isFuture = date > today && !isToday;
@@ -599,8 +698,8 @@ body {
                         // If it's today, cycle. If past, open popup.
                         if (isToday) {
                             let next = hours === 0 ? 2 : (hours < 14 ? hours + 1 : 0);
-                            state.history[iso] = next;
-                            saveData();
+                            window.state.history[iso] = next;
+                            window.saveData();
                             // Optimistic update done by renderAll via snapshot listener mostly, 
                             // but we can manually triggering render could feel snappier.
                             // Firebase snapshot usually fast enough.
@@ -741,8 +840,8 @@ body {
             
             // Update History
             const iso = getLocalISODate(popupState.date);
-            state.history[iso] = newH;
-            saveData();
+            window.state.history[iso] = newH;
+            window.saveData();
             
             // Re-render local immediately
             updatePopupContent();
@@ -768,12 +867,48 @@ body {
 
         // Header Buttons
         const toggleTheme = () => {
-            state.darkMode = !state.darkMode;
+            window.state.darkMode = !window.state.darkMode;
             applyTheme();
-            saveData();
+            window.saveData();
         };
         document.getElementById('theme-toggle-mobile').onclick = toggleTheme;
         document.getElementById('theme-toggle-desktop').onclick = toggleTheme;
+        
+        // Profile Modal
+        const profileModal = document.getElementById('profile-modal');
+        const profileBtn = document.getElementById('profile-btn');
+        const profileBtnMobile = document.getElementById('profile-btn-mobile');
+        const closeProfile = document.getElementById('close-profile');
+        const userEmail = document.getElementById('user-email');
+        const logoutBtn = document.getElementById('logout-btn');
+        const themeToggleProfile = document.getElementById('theme-toggle-profile');
+        
+        const openProfile = () => {
+            const user = auth.currentUser;
+            if (user) {
+                userEmail.textContent = user.email;
+            }
+            profileModal.classList.remove('hidden');
+            lucide.createIcons();
+        };
+        
+        profileBtn.onclick = openProfile;
+        profileBtnMobile.onclick = openProfile;
+        
+        closeProfile.onclick = () => profileModal.classList.add('hidden');
+        profileModal.onclick = (e) => {
+            if (e.target === profileModal) profileModal.classList.add('hidden');
+        };
+        
+        themeToggleProfile.onclick = () => {
+            toggleTheme();
+            lucide.createIcons();
+        };
+        
+        logoutBtn.onclick = async () => {
+            await window.FirebaseAuth.logout();
+            window.location.href = 'login.html';
+        };
 
         // Splash Screen
         setTimeout(() => {
