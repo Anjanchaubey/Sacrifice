@@ -1,0 +1,1176 @@
+<!DOCTYPE html>
+<html lang="en" class="antialiased">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Caffine | Intelligent Planner</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" href="data:image/svg+xml,%3Csvg viewBox='0 0 24 24' fill='none' stroke='%23d97706' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M18 8h1a4 4 0 0 1 0 8h-1'/%3E%3Cpath d='M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z'/%3E%3Cline x1='6' y1='1' x2='6' y2='4'/%3E%3Cline x1='10' y1='1' x2='10' y2='4'/%3E%3Cline x1='14' y1='1' x2='14' y2='4'/%3E%3C/svg%3E">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = { 
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#fff8f1',
+                            100: '#feecdc',
+                            200: '#fcd9bd',
+                            300: '#fdba8c',
+                            400: '#ff8a4c',
+                            500: '#ff5a1f', // Vibrant Orange
+                            600: '#ea3a0e',
+                            700: '#c22609',
+                            800: '#9a1f0d',
+                            900: '#7c1d0e',
+                            950: '#430b05',
+                        },
+                        dark: {
+                            bg: '#09090b',
+                            surface: '#121215',
+                            border: '#27272a'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Plus Jakarta Sans', 'Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    animation: {
+                        'blob': 'blob 10s infinite',
+                        'fade-in': 'fadeIn 0.5s ease-out forwards',
+                        'slide-up': 'slideUp 0.4s ease-out forwards',
+                    },
+                    keyframes: {
+                        blob: {
+                            '0%': { transform: 'translate(0px, 0px) scale(1)' },
+                            '33%': { transform: 'translate(30px, -50px) scale(1.1)' },
+                            '66%': { transform: 'translate(-20px, 20px) scale(0.9)' },
+                            '100%': { transform: 'translate(0px, 0px) scale(1)' },
+                        },
+                        fadeIn: {
+                            '0%': { opacity: '0' },
+                            '100%': { opacity: '1' },
+                        },
+                        slideUp: {
+                            '0%': { opacity: '0', transform: 'translateY(20px)' },
+                            '100%': { opacity: '1', transform: 'translateY(0)' },
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <!-- KaTeX for Math -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+    <!-- Puter.js & Marked -->
+    <script src="https://js.puter.com/v2/"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <style>
+        /* Base Styles */
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        /* Modern Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .dark ::-webkit-scrollbar-thumb { background: #3f3f46; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Glassmorphism System */
+        .glass-base {
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        }
+        .dark .glass-base {
+            background: rgba(18, 18, 21, 0.65);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3), 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+        }
+        .dark .glass-card {
+            background: rgba(24, 24, 27, 0.7);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Input Styling */
+        .input-modern {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .input-modern:focus {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(255, 90, 31, 0.15);
+        }
+
+        /* Custom Range Slider */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: #ff5a1f;
+            border: 3px solid #fff;
+            cursor: pointer;
+            margin-top: -10px;
+            box-shadow: 0 2px 8px rgba(255, 90, 31, 0.4);
+            transition: transform 0.1s;
+        }
+        .dark input[type=range]::-webkit-slider-thumb { border-color: #18181b; }
+        input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.15); }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #fed7aa;
+            border-radius: 2px;
+        }
+        .dark input[type=range]::-webkit-slider-runnable-track { background: #3f3f46; }
+
+        /* --- Timeline & Markdown Styling --- */
+        .prose { max-width: none; }
+        
+        /* Timeline Container */
+        .timeline-view ul {
+            position: relative;
+            margin-left: 8px;
+            padding-left: 32px;
+            list-style: none !important;
+            border-left: 1px solid rgba(148, 163, 184, 0.15);
+        }
+        .dark .timeline-view ul { 
+            border-left-color: rgba(100, 116, 139, 0.12);
+        }
+
+        /* Timeline Items - Floating Blocks */
+        .timeline-view li {
+            position: relative;
+            margin-bottom: 1.75rem;
+            padding: 1.125rem 1.5rem;
+            padding-right: 7rem;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 10px;
+            border: none;
+            box-shadow: none;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            font-size: 0.9rem;
+            line-height: 1.65;
+        }
+        .dark .timeline-view li {
+            background: rgba(24, 24, 27, 0.4);
+        }
+
+        /* Hover - Subtle Lift & Glow */
+        .timeline-view li:hover {
+            transform: translateY(-1px);
+            background: rgba(255, 255, 255, 0.75);
+        }
+        .dark .timeline-view li:hover {
+            background: rgba(24, 24, 27, 0.55);
+        }
+
+        /* Timeline Dots - Minimal */
+        .timeline-view li::before {
+            content: '';
+            position: absolute;
+            left: -36px;
+            top: 1.25rem;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: rgba(148, 163, 184, 0.4);
+            border: none;
+            transition: all 0.4s ease;
+        }
+        .dark .timeline-view li::before {
+            background: rgba(100, 116, 139, 0.5);
+        }
+
+        /* Work Session - Soft Emerald Tint */
+        .timeline-view li.work-session {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(16, 185, 129, 0.01) 100%);
+        }
+        .dark .timeline-view li.work-session {
+            background: linear-gradient(135deg, rgba(16, 185, 129, 0.08) 0%, rgba(16, 185, 129, 0.02) 100%);
+        }
+        .timeline-view li.work-session::before {
+            background: rgba(16, 185, 129, 0.6);
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.08);
+        }
+        .dark .timeline-view li.work-session::before {
+            background: rgba(16, 185, 129, 0.7);
+            box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.12);
+        }
+        .timeline-view li.work-session:hover::before {
+            box-shadow: 0 0 0 5px rgba(16, 185, 129, 0.12), 0 0 12px rgba(16, 185, 129, 0.2);
+        }
+
+        /* Break Session - Soft Blue Tint */
+        .timeline-view li.break-session {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.03) 0%, rgba(59, 130, 246, 0.01) 100%);
+        }
+        .dark .timeline-view li.break-session {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.06) 0%, rgba(59, 130, 246, 0.015) 100%);
+        }
+        .timeline-view li.break-session::before {
+            background: rgba(59, 130, 246, 0.6);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.08);
+        }
+        .dark .timeline-view li.break-session::before {
+            background: rgba(59, 130, 246, 0.7);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+        }
+        .timeline-view li.break-session:hover::before {
+            box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.12), 0 0 12px rgba(59, 130, 246, 0.2);
+        }
+
+        /* Typography - Calm Hierarchy */
+        .timeline-view strong {
+            display: inline-block;
+            color: #334155;
+            font-weight: 500;
+            margin-right: 0.5rem;
+        }
+        .dark .timeline-view strong { 
+            color: #cbd5e1;
+        }
+        
+        /* Time Badge - Compact & Muted */
+        .timeline-time {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: #64748b;
+            background: rgba(241, 245, 249, 0.6);
+            padding: 3px 8px;
+            border-radius: 5px;
+            display: inline-block;
+            margin-right: 10px;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+        }
+        .dark .timeline-time {
+            color: #94a3b8;
+            background: rgba(39, 39, 42, 0.5);
+        }
+        
+        /* Duration Pill - Soft & Minimal */
+        .duration-tag {
+            position: absolute;
+            right: 1.25rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(16, 185, 129, 0.12);
+            color: #059669;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.35rem 0.7rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            letter-spacing: -0.02em;
+            white-space: nowrap;
+        }
+        .dark .duration-tag {
+            background: rgba(16, 185, 129, 0.15);
+            color: #6ee7b7;
+        }
+        .duration-tag.short-break {
+            background: rgba(59, 130, 246, 0.12);
+            color: #2563eb;
+        }
+        .dark .duration-tag.short-break {
+            background: rgba(59, 130, 246, 0.15);
+            color: #93c5fd;
+        }
+
+        /* --- Tables (Minimal View) --- */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 1rem 0;
+            font-size: 0.85rem;
+            background: rgba(255,255,255,0.5);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .dark table { background: rgba(0,0,0,0.2); }
+        
+        th {
+            background: #f8fafc;
+            color: #475569;
+            font-weight: 600;
+            text-align: left;
+            padding: 1rem;
+            border-bottom: 2px solid #e2e8f0;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .dark th {
+            background: #1e1e24;
+            color: #cbd5e1;
+            border-color: #3f3f46;
+        }
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid #e2e8f0;
+            color: #334155;
+            vertical-align: middle;
+        }
+        .dark td {
+            border-color: #27272a;
+            color: #94a3b8;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(0,0,0,0.02); }
+        .dark tr:hover td { background: rgba(255,255,255,0.02); }
+        
+        /* KaTeX Overrides */
+        .katex-display { margin: 1em 0; overflow-x: auto; overflow-y: hidden; }
+    </style>
+</head>
+<body class="bg-brand-50 dark:bg-dark-bg min-h-screen text-slate-900 dark:text-brand-50 overflow-x-hidden selection:bg-brand-200 dark:selection:bg-brand-900">
+
+    <!-- Dynamic Background -->
+    <div class="fixed inset-0 z-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-0 left-1/4 w-[800px] h-[800px] bg-brand-200/40 dark:bg-brand-900/10 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-70 animate-blob"></div>
+        <div class="absolute top-0 right-1/4 w-[600px] h-[600px] bg-purple-200/40 dark:bg-purple-900/10 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-70 animate-blob animation-delay-2000"></div>
+        <div class="absolute -bottom-32 left-1/3 w-[600px] h-[600px] bg-pink-200/40 dark:bg-pink-900/10 rounded-full mix-blend-multiply dark:mix-blend-screen filter blur-[120px] opacity-70 animate-blob animation-delay-4000"></div>
+    </div>
+
+    <!-- Mobile Navbar -->
+    <nav class="lg:hidden fixed top-0 left-0 right-0 z-50 glass-base px-4 py-3 flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-amber-600 dark:text-amber-400">
+                <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
+                <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
+                <line x1="6" y1="1" x2="6" y2="4"></line>
+                <line x1="10" y1="1" x2="10" y2="4"></line>
+                <line x1="14" y1="1" x2="14" y2="4"></line>
+            </svg>
+            <select id="goalHoursMobile" class="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-white/10 bg-white dark:bg-black/20 text-slate-900 dark:text-white text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-brand-500/20">
+            </select>
+        </div>
+        <div class="flex items-center gap-3">
+            <button id="darkModeToggleMobile" class="w-9 h-9 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-300">
+                <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+            <div id="currentTimeMobile" class="text-sm font-bold text-slate-800 dark:text-white font-mono"></div>
+            <button id="profileBtnMobile" class="w-9 h-9 bg-slate-200 dark:bg-slate-700 rounded-full flex items-center justify-center text-slate-700 dark:text-slate-300 font-bold text-sm">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Mobile Profile Popup -->
+    <div id="profilePopup" class="lg:hidden fixed inset-0 z-[60] bg-black/50 backdrop-blur-sm hidden">
+        <div class="absolute top-16 right-4 glass-card rounded-2xl p-4 w-64 shadow-2xl">
+            <div class="flex flex-col gap-3">
+                <div class="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-slate-700">
+                    <div class="w-10 h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                        C
+                    </div>
+                    <div>
+                        <div class="text-sm font-bold text-slate-800 dark:text-white">Caffine</div>
+                        <div class="text-[10px] text-slate-500 dark:text-slate-400">Intelligent Planner</div>
+                    </div>
+                </div>
+                <div class="text-xs font-semibold text-slate-500 dark:text-slate-400">Signed in as</div>
+                <div id="userEmailMobile" class="text-sm font-bold text-slate-800 dark:text-white">Guest User</div>
+                <button id="logoutBtnMobile" class="w-full py-2 px-4 bg-red-500 hover:bg-red-600 text-white font-semibold rounded-lg transition-all flex items-center justify-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                    Logout
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- App Container -->
+    <div class="relative z-10 flex flex-col h-screen max-w-[1600px] mx-auto lg:p-4 md:p-6 lg:p-8 gap-6 pt-16 lg:pt-4">
+        
+        <!-- Header -->
+        <header class="hidden lg:flex glass-base rounded-2xl px-6 py-4 justify-between items-center shadow-sm shrink-0">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 bg-gradient-to-br from-brand-400 to-brand-600 rounded-xl flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand-500/30 transform hover:scale-105 transition-transform cursor-pointer">
+                    C
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-slate-800 dark:text-white">Caffine</h1>
+                    <p class="text-[10px] font-medium text-slate-500 dark:text-slate-400 uppercase tracking-widest">Intelligent Planner</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-6">
+                <button id="darkModeToggle" class="p-2.5 text-slate-400 hover:text-brand-500 hover:bg-brand-50 dark:hover:bg-brand-900/20 rounded-xl transition-all duration-300">
+                    <svg class="w-5 h-5 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <svg class="w-5 h-5 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                </button>
+                <div class="hidden md:flex flex-col items-end">
+                    <span id="userEmail" class="text-xs font-semibold text-slate-700 dark:text-slate-300">Guest User</span>
+                    <span class="text-[10px] text-emerald-500 font-bold flex items-center gap-1.5 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-0.5 rounded-full mt-0.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span> SYNC ACTIVE
+                    </span>
+                </div>
+                <button id="logoutBtn" class="p-2.5 text-slate-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-xl transition-all duration-300 group">
+                    <svg class="w-5 h-5 group-hover:rotate-180 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Workspace -->
+        <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-6 min-h-0">
+            
+            <!-- Left Config Panel -->
+            <aside class="hidden lg:flex lg:col-span-4 flex-col gap-4 min-h-0">
+                <div class="glass-card rounded-3xl p-6 lg:p-8 flex flex-col h-full overflow-y-auto animate-slide-up">
+                    <div class="flex items-center justify-between mb-8">
+                        <h2 class="text-xl font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                            <svg class="w-5 h-5 text-brand-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                            Setup
+                        </h2>
+                        <div id="saveStatus" class="text-[10px] font-bold text-emerald-500 tracking-wider opacity-0 transition-opacity duration-300 bg-emerald-50 dark:bg-emerald-900/20 px-2 py-1 rounded">SAVED</div>
+                    </div>
+
+                    <div class="space-y-8 flex-1">
+                        <!-- Current Time -->
+                        <div class="group">
+                            <label class="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Current Time</label>
+                            <div class="relative">
+                                <div id="currentTimeDisplay" class="w-full pl-12 pr-4 py-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-black/20 text-slate-900 dark:text-white text-lg font-semibold"></div>
+                                <svg class="w-6 h-6 text-brand-500 absolute left-4 top-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            </div>
+                        </div>
+
+                        <!-- Duration Slider -->
+                        <div class="hidden lg:block">
+                            <div class="flex justify-between items-end mb-4">
+                                <label class="text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider">Session Length</label>
+                                <span id="goalDisplay" class="text-3xl font-bold text-brand-600 dark:text-brand-400 font-mono tracking-tighter">4h</span>
+                            </div>
+                            <input type="range" id="goalHours" min="1" max="14" step="0.5" value="4" class="w-full">
+                            <div class="flex justify-between text-[10px] font-bold text-slate-300 dark:text-slate-600 mt-2 font-mono">
+                                <span>1H</span>
+                                <span>FOCUS MODE</span>
+                                <span>14H</span>
+                            </div>
+                        </div>
+
+                        <!-- Metric Card -->
+                        <div class="bg-gradient-to-br from-brand-50 to-orange-50 dark:from-brand-900/10 dark:to-orange-900/10 p-5 rounded-2xl border border-brand-100 dark:border-brand-500/10 relative overflow-hidden group hover:shadow-lg transition-all duration-500">
+                            <div class="absolute -right-6 -top-6 w-24 h-24 bg-brand-500/10 rounded-full transition-transform group-hover:scale-150 duration-700"></div>
+                            <div class="relative z-10">
+                                <div class="text-[10px] font-bold text-brand-600 dark:text-brand-400 uppercase tracking-widest mb-1">Deep Work Cycles</div>
+                                <div class="flex items-baseline gap-2">
+                                    <span id="stbCount" class="text-4xl font-extrabold text-slate-900 dark:text-white tracking-tighter">2.7</span>
+                                    <span class="text-xs font-semibold text-brand-600/60 dark:text-brand-400/60">x 90min</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Focus Area -->
+                        <div class="flex-1 flex flex-col">
+                            <label class="block text-xs font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mb-3">Core Objectives</label>
+                            <div class="relative flex-1">
+                                <textarea id="focusArea" class="input-modern w-full h-full p-4 pl-4 rounded-2xl border border-slate-200 dark:border-white/10 bg-white/50 dark:bg-black/20 text-slate-900 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 resize-none transition-all placeholder-slate-400/70 text-sm leading-relaxed" placeholder="What is your mission today?&#10;• Solve 10 Physics Problems (Mechanics)&#10;• Write Essay Outline"></textarea>
+                                <div class="absolute bottom-3 right-3 text-slate-300 pointer-events-none">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Generate Button -->
+                    <button id="generateBtn" class="mt-6 w-full py-4 px-6 bg-gradient-to-r from-slate-900 to-slate-800 dark:from-brand-500 dark:to-brand-600 hover:to-slate-700 dark:hover:to-brand-500 text-white font-bold rounded-2xl shadow-xl shadow-slate-900/10 dark:shadow-brand-500/20 transform transition-all active:scale-[0.98] hover:-translate-y-0.5 flex items-center justify-center gap-3 group relative overflow-hidden">
+                        <div class="absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                        <span class="text-sm uppercase tracking-wider relative z-10">Architect My Day</span>
+                        <svg class="w-4 h-4 relative z-10 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
+                </div>
+            </aside>
+
+            <!-- Right Content Panel -->
+            <section class="col-span-1 lg:col-span-8 flex flex-col min-h-0 relative group">
+                <div class="glass-card lg:rounded-3xl flex-1 flex flex-col overflow-hidden relative border-0 lg:border lg:border-white/40 dark:lg:border-white/5 animate-slide-up" style="animation-delay: 0.1s;">
+                    
+                    <!-- Output Toolbar -->
+                    <div class="px-6 py-4 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-white/40 dark:bg-black/20 backdrop-blur-md z-10">
+                        <div class="flex items-center gap-3">
+                            <div class="h-2 w-2 rounded-full bg-brand-500"></div>
+                            <h2 class="text-sm font-bold text-slate-800 dark:text-white uppercase tracking-wider">Blueprint</h2>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="copyBtn" class="p-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-200 transition-all" title="Copy to Clipboard">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3"></path></svg>
+                            </button>
+                            <button id="toggleViewBtn" class="p-2 bg-white dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-lg text-slate-500 dark:text-slate-400 hover:text-brand-600 dark:hover:text-brand-400 hover:border-brand-200 transition-all" title="Toggle Table/Timeline">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Main Output Area -->
+                    <div id="planOutput" class="timeline-view flex-1 p-4 lg:p-8 overflow-y-auto prose prose-slate dark:prose-invert max-w-none scroll-smooth text-sm">
+                        <!-- Empty State -->
+                        <div class="h-full flex flex-col items-center justify-center text-center opacity-60 select-none pb-20">
+                            <div class="w-32 h-32 bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center mb-6 animate-pulse">
+                                <svg class="w-12 h-12 text-slate-300 dark:text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                            </div>
+                            <h3 class="text-xl font-bold text-slate-800 dark:text-slate-200">Awaiting Instructions</h3>
+                            <p class="text-sm text-slate-500 max-w-sm mt-3 leading-relaxed">Configure your parameters on the left. The AI is ready to generate a schedule optimized for cognitive load.</p>
+                        </div>
+                    </div>
+
+                    <!-- Chat Trigger -->
+                    <button id="chatBtn" class="absolute bottom-6 right-6 w-12 h-12 lg:w-14 lg:h-14 bg-gradient-to-br from-amber-400 to-amber-600 hover:from-amber-500 hover:to-amber-700 rounded-full shadow-lg shadow-amber-500/30 flex items-center justify-center transition-all hover:scale-110 z-20 group">
+                        <svg class="w-6 h-6 lg:w-8 lg:h-8" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg" fill="#000000"><g><circle class="cls-1" cx="64" cy="64" r="60" fill="#f2bc0f"></circle><circle class="cls-2" cx="64" cy="64" r="48" fill="#ffffff" opacity="0.3"></circle><path class="cls-3" d="M64,124.1a59.78,59.78,0,0,0,40-15.28l-2.39-5.68c-1.71-4-6.22-6.64-11.29-6.64H37.69c-5.07,0-9.58,2.66-11.29,6.64L24,108.82A59.78,59.78,0,0,0,64,124.1Z" fill="#515570"></path><path class="cls-4" d="M95.25,60.43c0,4.38.45,7.93-3.93,7.93a7.93,7.93,0,1,1,0-15.86C95.7,52.5,95.25,56.05,95.25,60.43Z" fill="#393c54"></path><path class="cls-4" d="M44.61,60.43a7.93,7.93,0,0,1-7.93,7.93c-4.38,0-3.93-3.55-3.93-7.93s-.45-7.93,3.93-7.93A7.93,7.93,0,0,1,44.61,60.43Z" fill="#393c54"></path><path class="cls-5" d="M64,95.37A28.31,28.31,0,0,1,35.68,67.05V52.43c0-15.64,12.68-25.32,28.32-25.32s28.32,9.68,28.32,25.32V67.05A28.31,28.31,0,0,1,64,95.37Z" fill="#ffd8c9"></path><path class="cls-4" d="M35,67.53l27.68,6.22a6.14,6.14,0,0,0,2.63,0L93,67.53V22.7a1,1,0,0,0-1.6-.8l-10,7.45s-6.12-5.8-17.39-5.8A27.83,27.83,0,0,0,45.92,30l-9.27-7.9a1,1,0,0,0-1.65.76Z" fill="#393c54"></path><path class="cls-8" d="M46.13,57.75,55.88,60a5,5,0,1,1-9.75-2.21Z" fill="#ffffff"></path><circle class="cls-4" cx="51" cy="59.02" r="2.72" fill="#393c54"></circle><path class="cls-11" d="M78,111.82a.5.5,0,0,0-.26-.93H69.65a.7.7,0,0,0-.65.43h0a3.15,3.15,0,0,1-2.3,1.89l-1,.21a.36.36,0,0,1-.43-.29L65,111.72a.08.08,0,0,0-.15,0l-.28.66a2.37,2.37,0,0,0-1.06,0l-.28-.66a.08.08,0,0,0-.15,0l-.27,1.41a.36.36,0,0,1-.43.29l-1-.21a3.15,3.15,0,0,1-2.3-1.89h0a.7.7,0,0,0-.65-.43H50.29a.5.5,0,0,0-.26.93,5.67,5.67,0,0,1,2.85,4.72.49.49,0,0,0,.56.49,13.27,13.27,0,0,1,5.89.46,9.19,9.19,0,0,1,4.26,3.41.5.5,0,0,0,.82,0,9.19,9.19,0,0,1,4.26-3.41,13.27,13.27,0,0,1,5.89-.46.49.49,0,0,0,.56-.49A5.67,5.67,0,0,1,78,111.82Z" fill="#f8dc25"></path><path class="cls-8" d="M81.87,57.75,72.12,60a5,5,0,1,0,9.75-2.21Z" fill="#ffffff"></path><circle class="cls-4" cx="77.06" cy="59.01" r="2.63" fill="#393c54"></circle><path class="cls-4" d="M93,96.5V67l-5,1.36L85.25,80.65a15.8,15.8,0,0,1-7.39,10.16l-2.14.93a29.26,29.26,0,0,1-23.44,0l-2.14-.93a15.8,15.8,0,0,1-7.39-10.16L40,68.36,35,67V96.5l-16.46,6.64,1.37,1.55a60.21,60.21,0,0,0,17.24,13l19.35-13A14,14,0,0,1,64,102.5a16.37,16.37,0,0,1,7.5,1.81l19.37,13.34a60.39,60.39,0,0,0,17-12.72c.56-.61,1.1-1.21,1.61-1.79Z" fill="#393c54"></path><path class="cls-3" d="M64,63.12v8.21a.51.51,0,0,1-.63.49l-3.62-1a.51.51,0,0,1-.31-.71l3.61-7.23A.5.5,0,0,1,64,63.12Z" fill="#515570"></path></g></svg>
+                    </button>
+
+                    <!-- Floating Action Menu -->
+                    <div id="floatingMenu" class="absolute bottom-24 right-6 hidden flex-col gap-3 z-20">
+                        <button id="generateBtnMobile" class="w-12 h-12 bg-emerald-500 hover:bg-emerald-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all active:scale-95">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+                        </button>
+                        <button id="openChatBtn" class="w-12 h-12 bg-purple-500 hover:bg-purple-600 text-white rounded-full shadow-lg flex items-center justify-center transition-all active:scale-95">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path></svg>
+                        </button>
+                    </div>
+
+                    <!-- Loading Overlay -->
+                    <div id="loadingOverlay" class="absolute inset-0 bg-white/90 dark:bg-dark-bg/90 backdrop-blur-sm flex flex-col items-center justify-center z-30 hidden transition-all duration-300">
+                        <div class="relative">
+                            <div class="w-20 h-20 border-4 border-slate-100 dark:border-white/5 rounded-full"></div>
+                            <div class="w-20 h-20 border-4 border-brand-500 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+                            <div class="absolute inset-0 flex items-center justify-center font-bold text-xs text-brand-500 animate-pulse">AI</div>
+                        </div>
+                        <p class="mt-6 font-bold text-slate-800 dark:text-white tracking-widest text-xs uppercase animate-pulse">Optimizing Schedule...</p>
+                    </div>
+
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Chat Modal -->
+    <div id="chatPanel" class="fixed inset-y-0 right-0 w-full md:w-[450px] bg-white/95 dark:bg-[#121215]/95 backdrop-blur-xl z-50 transform translate-x-full transition-transform duration-300 ease-out shadow-2xl border-l border-white/20 flex flex-col">
+        <!-- Chat Header -->
+        <div class="px-4 py-3 border-b border-slate-100 dark:border-white/5 bg-white/50 dark:bg-white/5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <button id="closeChatBtn" class="p-1.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors">
+                    <svg class="w-5 h-5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                <h3 class="font-bold text-slate-800 dark:text-white text-base">Caffine AI</h3>
+            </div>
+            <div class="flex items-center gap-2">
+                <label class="flex items-center gap-1.5 cursor-pointer group">
+                    <input type="checkbox" id="agentMode" class="sr-only peer">
+                    <div class="w-8 h-4 bg-slate-200 peer-focus:outline-none rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all dark:border-gray-600 peer-checked:bg-brand-500 relative"></div>
+                    <span class="text-[10px] font-medium text-slate-500 group-hover:text-brand-500 transition-colors">Agent</span>
+                </label>
+                <button id="modelToggleBtn" class="p-1.5 hover:bg-slate-100 dark:hover:bg-white/10 rounded-lg transition-colors" title="Toggle Model">
+                    <svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </button>
+            </div>
+        </div>
+
+        <!-- Chat Messages -->
+        <div id="chatMessages" class="flex-1 overflow-y-auto p-5 space-y-4 bg-slate-50/50 dark:bg-black/20">
+            <!-- Intro Message -->
+            <div class="w-full py-4 px-4 text-slate-700 dark:text-slate-300 text-sm">
+                Hello! I can help you modify your schedule, add physics formulas using LaTeX, or create data tables. What do you need?
+            </div>
+        </div>
+
+        <!-- Chat Input -->
+        <div class="p-4 border-t border-slate-100 dark:border-white/5 bg-white dark:bg-[#121215]">
+            <div class="flex gap-2">
+                <div class="relative flex-1">
+                    <input id="chatInput" type="text" placeholder="Type a message..." class="w-full pl-3 pr-3 py-2 rounded-xl border border-slate-200 dark:border-white/10 bg-slate-50 dark:bg-black/20 focus:outline-none focus:ring-2 focus:ring-brand-500/50 focus:border-transparent text-sm">
+                </div>
+                <button id="sendChatBtn" class="px-3 bg-brand-500 hover:bg-brand-600 text-white rounded-xl shadow-lg shadow-brand-500/20 transition-all active:scale-95">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, onAuthStateChanged, signOut, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyCYY2GQqS0tCXb7Oxw8AWXhpexq9e8VRUs",
+            authDomain: "aspirehub-32863.firebaseapp.com",
+            projectId: "aspirehub-32863",
+            storageBucket: "aspirehub-32863.appspot.com",
+            messagingSenderId: "686810111182",
+            appId: "1:686810111182:web:4290b4b1b6e64934ec449f"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // UI Elements
+        const els = {
+            goalHours: document.getElementById('goalHours'),
+            goalHoursMobile: document.getElementById('goalHoursMobile'),
+            goalDisplay: document.getElementById('goalDisplay'),
+            currentTimeDisplay: document.getElementById('currentTimeDisplay'),
+            currentTimeMobile: document.getElementById('currentTimeMobile'),
+            stbCount: document.getElementById('stbCount'),
+            focusArea: document.getElementById('focusArea'),
+            generateBtn: document.getElementById('generateBtn'),
+            generateBtnMobile: document.getElementById('generateBtnMobile'),
+            planOutput: document.getElementById('planOutput'),
+            loadingOverlay: document.getElementById('loadingOverlay'),
+            userEmail: document.getElementById('userEmail'),
+            userEmailMobile: document.getElementById('userEmailMobile'),
+            logoutBtn: document.getElementById('logoutBtn'),
+            logoutBtnMobile: document.getElementById('logoutBtnMobile'),
+            profileBtnMobile: document.getElementById('profileBtnMobile'),
+            profilePopup: document.getElementById('profilePopup'),
+            saveStatus: document.getElementById('saveStatus'),
+            copyBtn: document.getElementById('copyBtn'),
+            toggleViewBtn: document.getElementById('toggleViewBtn'),
+            chatBtn: document.getElementById('chatBtn'),
+            chatPanel: document.getElementById('chatPanel'),
+            closeChatBtn: document.getElementById('closeChatBtn'),
+            chatInput: document.getElementById('chatInput'),
+            sendChatBtn: document.getElementById('sendChatBtn'),
+            chatMessages: document.getElementById('chatMessages'),
+            agentMode: document.getElementById('agentMode'),
+            modelToggleBtn: document.getElementById('modelToggleBtn')
+        };
+
+        let currentUser = null;
+        let unsubscribe = null;
+        let debounceTimer;
+        let currentModel = 'gemini-2.0-flash';
+        let chatHistory = [];
+        
+        // Populate mobile dropdown
+        for (let i = 1; i <= 14; i += 0.5) {
+            const opt = document.createElement('option');
+            opt.value = i;
+            opt.textContent = i + 'h';
+            if (i === 4) opt.selected = true;
+            els.goalHoursMobile.appendChild(opt);
+        }
+        
+        // Update current time
+        function updateCurrentTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+            if (els.currentTimeDisplay) els.currentTimeDisplay.textContent = timeStr;
+            if (els.currentTimeMobile) els.currentTimeMobile.textContent = timeStr;
+        }
+        updateCurrentTime();
+        setInterval(updateCurrentTime, 1000);
+        
+        // Profile popup
+        els.profileBtnMobile.addEventListener('click', () => els.profilePopup.classList.toggle('hidden'));
+        els.profilePopup.addEventListener('click', (e) => {
+            if (e.target === els.profilePopup) els.profilePopup.classList.add('hidden');
+        });
+        
+        // Floating menu
+        const floatingMenu = document.getElementById('floatingMenu');
+        const openChatBtn = document.getElementById('openChatBtn');
+        
+        els.chatBtn.addEventListener('click', () => {
+            floatingMenu.classList.toggle('hidden');
+            floatingMenu.classList.toggle('flex');
+        });
+        
+        openChatBtn.addEventListener('click', () => {
+            els.chatPanel.classList.remove('translate-x-full');
+            floatingMenu.classList.add('hidden');
+            floatingMenu.classList.remove('flex');
+        });
+
+        // --- Auth & Init ---
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                const displayName = user.isAnonymous ? 'Guest User' : user.email;
+                els.userEmail.textContent = displayName;
+                els.userEmailMobile.textContent = displayName;
+                initRealtimeSync(user.uid);
+            } else {
+                signInAnonymously(auth);
+            }
+        });
+
+        // --- Core Logic ---
+        function initRealtimeSync(uid) {
+            if (unsubscribe) unsubscribe();
+            const docRef = doc(db, "users", uid, "planner", "daily");
+            
+            unsubscribe = onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    
+                    if (document.activeElement !== els.goalHours && document.activeElement !== els.goalHoursMobile) {
+                        const hours = data.goalHours || 4;
+                        els.goalHours.value = hours;
+                        els.goalHoursMobile.value = hours;
+                        updateSTB();
+                    }
+                    if (document.activeElement !== els.focusArea) els.focusArea.value = data.focusArea || "";
+                    
+                    // HTML Content Sync
+                    if (data.currentPlanHTML && els.planOutput.innerHTML !== data.currentPlanHTML) {
+                        if (!data.currentPlanHTML.includes("Awaiting Instructions") || els.planOutput.innerHTML.length < 100) {
+                            els.planOutput.innerHTML = data.currentPlanHTML;
+                            postProcessOutput(); // Apply Math/Styling
+                        }
+                    }
+                }
+            });
+        }
+
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true });
+        }
+
+        function updateSTB() {
+            const hours = parseFloat(els.goalHours.value);
+            els.goalDisplay.textContent = hours + 'h';
+            const stbs = (hours / 1.5).toFixed(1);
+            els.stbCount.textContent = stbs;
+        }
+
+        function triggerSave() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(saveUserData, 800);
+        }
+
+        async function saveUserData() {
+            if (!currentUser) return;
+            
+            els.saveStatus.style.opacity = '1';
+            setTimeout(() => els.saveStatus.style.opacity = '0', 2000);
+            
+            const data = {
+                goalHours: els.goalHours.value || els.goalHoursMobile.value,
+                focusArea: els.focusArea.value,
+                currentPlanHTML: els.planOutput.innerHTML,
+                lastUpdated: new Date()
+            };
+
+            try {
+                await setDoc(doc(db, "users", currentUser.uid, "planner", "daily"), data, { merge: true });
+            } catch (e) { console.error("Save failed", e); }
+        }
+
+        // --- Event Listeners ---
+        els.goalHours.addEventListener('input', () => { 
+            els.goalHoursMobile.value = els.goalHours.value;
+            updateSTB(); 
+            triggerSave(); 
+        });
+        els.goalHoursMobile.addEventListener('change', () => { 
+            els.goalHours.value = els.goalHoursMobile.value;
+            updateSTB(); 
+            triggerSave(); 
+        });
+        els.focusArea.addEventListener('input', triggerSave);
+        
+        const handleLogout = () => {
+            if (unsubscribe) unsubscribe();
+            signOut(auth).then(() => window.location.href = 'login.html');
+        };
+        els.logoutBtn.addEventListener('click', handleLogout);
+        els.logoutBtnMobile.addEventListener('click', handleLogout);
+
+        // --- AI Generation ---
+        async function generateSchedule() {
+            const hours = els.goalHours.value || els.goalHoursMobile.value;
+            const currentTime = getCurrentTime();
+            const startTime = window.prompt('Start from when? (e.g., 9:00 AM, 14:30, 2:00 PM)', currentTime);
+            if (!startTime) return;
+            
+            const focus = els.focusArea.value;
+            const stbs = els.stbCount.textContent;
+
+            els.loadingOverlay.classList.remove('hidden');
+
+            const aiPrompt = `
+                CRITICAL: The user wants ${hours} hours of PURE STUDY TIME (not including breaks).
+
+                STRICT RULES:
+
+                Study Blocks (STBs):
+                - Every study block (STB) is exactly 90 minutes
+                - Label them as STB 1, STB 2, STB 3…
+                - The TOTAL study time must equal ${hours} hours (${hours * 60} minutes)
+                - Do NOT count break time in the study duration
+
+                Break Structure:
+                - 10–15 minutes break after every STB
+                - One long break of 30–45 minutes after every 2 STBs
+                - Breaks are EXTRA time on top of the ${hours} hours of study
+
+                Scope:
+                - Generate schedule only for today
+                - Include only study time and breaks
+                - Do NOT include: School, Sleep planning, Meals, Personal tasks
+
+                Content Restrictions:
+                - Do NOT tell me what to study
+                - Only create time slots + STB structure
+                - No subject names, no chapters, no suggestions
+
+                Energy Awareness:
+                - Start with heavier study blocks earlier
+                - Keep later blocks lighter
+
+                Realism:
+                - Maximum focus limit must be respected
+                - Quality > quantity
+
+                Output Format:
+                - Chronological order
+                - Clearly show: Time range, STB number, Breaks
+                - Keep it minimal and readable
+
+                Schedule Details:
+                - PURE STUDY TIME: ${hours} hours (${hours * 60} minutes) starting at ${startTime}
+                - Deep Work Blocks: ${stbs} (90min each)
+                - Goal: ${focus || "Focused Study"}
+                - REMEMBER: Breaks are ADDITIONAL to the ${hours} hours
+
+                **FORMATTING:**
+                1. Return a Markdown bulleted list.
+                2. Use 12-hour AM/PM format.
+                3. For STBs, start line with: **STB [number]**
+                4. For Breaks, start line with: **BREAK**
+                5. Format: **Start - End**: **TYPE** - Brief description
+            `;
+
+            try {
+                const response = await puter.ai.chat(aiPrompt, { model: 'gemini-2.5-pro' });
+                const markdown = typeof response === 'object' ? (response.text || response.message?.content) : response;
+                els.planOutput.innerHTML = marked.parse(markdown);
+                postProcessOutput();
+                await saveUserData();
+            } catch (error) {
+                console.error(error);
+                alert("AI Generation failed. Please try again.");
+            } finally {
+                els.loadingOverlay.classList.add('hidden');
+            }
+        }
+        
+        els.generateBtn.addEventListener('click', generateSchedule);
+        els.generateBtnMobile.addEventListener('click', generateSchedule);
+
+        // --- Output Processing (Timeline + Math) ---
+        function calculateDuration(startTime, endTime) {
+            const parseTime = (timeStr) => {
+                const match = timeStr.match(/(\d{1,2}):(\d{2})\s*([AP]M)/i);
+                if (!match) return null;
+                let [_, hours, minutes, period] = match;
+                hours = parseInt(hours);
+                minutes = parseInt(minutes);
+                period = period.toUpperCase();
+                if (period === 'PM' && hours !== 12) hours += 12;
+                if (period === 'AM' && hours === 12) hours = 0;
+                return hours * 60 + minutes;
+            };
+            
+            const start = parseTime(startTime);
+            const end = parseTime(endTime);
+            if (start === null || end === null) return null;
+            
+            let duration = end - start;
+            if (duration < 0) duration += 24 * 60; // Handle midnight crossing
+            return duration;
+        }
+
+        function postProcessOutput() {
+            // 1. Render Math
+            renderMathInElement(els.planOutput, {
+                delimiters: [
+                    {left: '$$', right: '$$', display: true},
+                    {left: '$', right: '$', display: false}
+                ],
+                throwOnError: false
+            });
+
+            // 2. Style Timeline & Add Tags
+            const items = els.planOutput.querySelectorAll('li');
+            items.forEach(item => {
+                const originalHTML = item.innerHTML;
+                
+                // Flexible regex to capture time ranges like:
+                // **9:00 AM - 10:00 AM**
+                // 9:00 AM - 10:00 AM
+                // **9:00 AM** - **10:00 AM**
+                const timeRegex = /((?:\*\*|\*|)\d{1,2}:\d{2}\s*[AP]M(?:\*\*|\*|)\s*[-–—]\s*(?:\*\*|\*|)\d{1,2}:\d{2}\s*[AP]M(?:\*\*|\*|))/i;
+                const timeMatch = originalHTML.match(timeRegex);
+
+                if (timeMatch) {
+                    const fullTimeStr = timeMatch[1];
+                    const cleanTimeStr = fullTimeStr.replace(/\*+/g, ''); // Remove asterisks for parsing
+                    const timeParts = cleanTimeStr.match(/(\d{1,2}:\d{2}\s*[AP]M)\s*[-–—]\s*(\d{1,2}:\d{2}\s*[AP]M)/i);
+                    
+                    let durationTag = '';
+                    if (timeParts) {
+                        const duration = calculateDuration(timeParts[1], timeParts[2]);
+                        if (duration !== null) {
+                            // Check if it's a break to style tag differently
+                            const isBreak = item.textContent.toLowerCase().includes('break');
+                            const tagClass = isBreak ? 'duration-tag short-break' : 'duration-tag';
+                            durationTag = `<span class="${tagClass}">${duration} min</span>`;
+                        }
+                    }
+
+                    // Replace the found time string with a styled version
+                    // and append the duration tag to the END of the li content
+                    // We remove asterisks from the visual display to look cleaner
+                    const styledTime = `<div class="timeline-time">${cleanTimeStr}</div>`;
+                    
+                    // We need to replace the original match in the HTML string
+                    // This can be tricky if regex matched wildcards, but fullTimeStr is exact match from text
+                    // We rebuild the innerHTML
+                    item.innerHTML = originalHTML.replace(fullTimeStr, styledTime) + durationTag;
+                }
+
+                // Apply class based on content
+                const text = item.textContent;
+                if (text.includes('STB') || text.includes('DEEP WORK') || text.includes('Work')) {
+                    item.classList.add('work-session');
+                } else if (text.includes('BREAK') || text.includes('Break')) {
+                    item.classList.add('break-session');
+                }
+            });
+        }
+
+        // --- Chat System ---
+        els.closeChatBtn.addEventListener('click', () => els.chatPanel.classList.add('translate-x-full'));
+
+        async function sendChatMessage() {
+            const msg = els.chatInput.value.trim();
+            if (!msg) return;
+
+            // User Message
+            appendMessage('user', msg);
+            els.chatInput.value = '';
+            
+            // Add to history
+            chatHistory.push({ role: 'user', content: msg });
+
+            const isAgent = els.agentMode.checked;
+            const currentPlan = els.planOutput.innerText;
+            
+            // Build conversation context
+            let conversationContext = `Current Schedule:\n${currentPlan}\n\n`;
+            conversationContext += 'Previous conversation:\n';
+            chatHistory.slice(-6).forEach(msg => {
+                conversationContext += `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}\n`;
+            });
+
+            const prompt = isAgent 
+                ? `${conversationContext}\nUser Request: ${msg}\n\nUpdate the schedule. Return ONLY the markdown list. Use LaTeX if needed ($...$).`
+                : `${conversationContext}\nContext: Planning app with study schedule. You can generate Markdown Tables and LaTeX math ($...$). Be helpful and reference the schedule when relevant.`;
+
+            // Loading indicator
+            const loadingId = 'loading-' + Date.now();
+            els.chatMessages.innerHTML += `<div id="${loadingId}" class="w-full py-3 px-4 bg-slate-50 dark:bg-white/5 rounded-lg"><span class="animate-pulse text-slate-600 dark:text-slate-400 text-sm">Thinking...</span></div>`;
+            els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+
+            try {
+                const response = await puter.ai.chat(prompt, { model: currentModel });
+                const aiText = response.message?.content || response.text || response;
+                
+                // Add to history
+                chatHistory.push({ role: 'assistant', content: aiText });
+                
+                document.getElementById(loadingId).remove();
+
+                if (isAgent) {
+                    els.planOutput.innerHTML = marked.parse(aiText);
+                    postProcessOutput();
+                    await saveUserData();
+                    appendMessage('ai', "I've updated your schedule.");
+                } else {
+                    appendMessage('ai', aiText);
+                }
+            } catch (e) {
+                document.getElementById(loadingId).remove();
+                appendMessage('ai', "Error: " + e.message);
+            }
+        }
+
+        function appendMessage(role, text) {
+            const isUser = role === 'user';
+            const html = marked.parse(text);
+            
+            const div = document.createElement('div');
+            if (isUser) {
+                div.className = 'flex justify-end';
+                div.innerHTML = `
+                    <div class="bg-brand-500 text-white p-3.5 rounded-2xl rounded-tr-none shadow-sm text-sm max-w-[85%] prose prose-invert">
+                        ${html}
+                    </div>
+                `;
+            } else {
+                div.className = 'w-full';
+                div.innerHTML = `
+                    <div class="w-full py-4 px-4 text-slate-700 dark:text-slate-300 text-sm prose dark:prose-invert max-w-none">
+                        ${html}
+                    </div>
+                `;
+            }
+            els.chatMessages.appendChild(div);
+            
+            // Render Math in Chat
+            renderMathInElement(div, {
+                delimiters: [{left: '$$', right: '$$', display: true}, {left: '$', right: '$', display: false}]
+            });
+            
+            els.chatMessages.scrollTop = els.chatMessages.scrollHeight;
+        }
+
+        els.sendChatBtn.addEventListener('click', sendChatMessage);
+        els.chatInput.addEventListener('keypress', (e) => { if(e.key === 'Enter') sendChatMessage() });
+        
+        // Copy Function
+        els.copyBtn.addEventListener('click', () => {
+            navigator.clipboard.writeText(els.planOutput.innerText);
+            const original = els.copyBtn.innerHTML;
+            els.copyBtn.innerHTML = `<svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>`;
+            setTimeout(() => els.copyBtn.innerHTML = original, 2000);
+        });
+
+        // Toggle View Function (Minimal / Table View)
+        let isTableView = false;
+        let originalContent = '';
+        
+        els.toggleViewBtn.addEventListener('click', () => {
+            if (!isTableView) {
+                originalContent = els.planOutput.innerHTML;
+                const items = els.planOutput.querySelectorAll('li');
+                let tableData = [];
+                
+                items.forEach(item => {
+                    const text = item.textContent;
+                    // Regex matching standard time format
+                    const timeMatch = text.match(/(\d{1,2}:\d{2}\s*[AP]M)\s*[-–—]\s*(\d{1,2}:\d{2}\s*[AP]M)/i);
+                    
+                    if (timeMatch) {
+                        const type = text.includes('STB') || text.includes('DEEP WORK') || text.includes('Work') ? 'Deep Work' : 
+                                     text.includes('BREAK') || text.includes('Break') ? 'Break' : 'Activity';
+                        const duration = calculateDuration(timeMatch[1], timeMatch[2]);
+                        
+                        // Extract description (everything after the time/type usually)
+                        // Simple cleanup to get the "rest" of the string
+                        let desc = text.replace(timeMatch[0], '').replace(type, '').replace('STB', '').replace(/STB\s*\d+/, '').replace(/Break/i, '').replace(/:\s*-\s*/, '').trim();
+                        if(desc.startsWith('-') || desc.startsWith(':')) desc = desc.substring(1).trim();
+
+                        tableData.push({ start: timeMatch[1], end: timeMatch[2], type, duration: duration || '-', desc });
+                    }
+                });
+                
+                if (tableData.length > 0) {
+                    let tableHTML = `
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left">
+                                <thead>
+                                    <tr>
+                                        <th class="rounded-tl-lg">Time Range</th>
+                                        <th>Duration</th>
+                                        <th class="rounded-tr-lg">Type</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                    `;
+                    
+                    tableData.forEach(row => {
+                        const typeClass = row.type === 'Deep Work' ? 'text-emerald-600 dark:text-emerald-400 font-bold' : 'text-blue-500 dark:text-blue-400';
+                        tableHTML += `
+                            <tr class="border-b border-slate-100 dark:border-white/5 last:border-0 hover:bg-white/50 dark:hover:bg-white/5 transition-colors">
+                                <td class="font-mono text-xs whitespace-nowrap">${row.start} - ${row.end}</td>
+                                <td class="font-mono text-xs font-bold text-slate-500 dark:text-slate-400">${row.duration} min</td>
+                                <td class="${typeClass} text-xs uppercase tracking-wider">${row.type}</td>
+                            </tr>
+                        `;
+                    });
+                    
+                    tableHTML += '</tbody></table></div>';
+                    els.planOutput.innerHTML = tableHTML;
+                    els.planOutput.classList.remove('timeline-view');
+                }
+                isTableView = true;
+            } else {
+                els.planOutput.innerHTML = originalContent;
+                els.planOutput.classList.add('timeline-view');
+                // Re-apply post processing because innerHTML was reset
+                postProcessOutput();
+                isTableView = false;
+            }
+        });
+
+        // Initialize Defaults
+        updateSTB();
+        
+        // Dark Mode Toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const darkModeToggleMobile = document.getElementById('darkModeToggleMobile');
+        
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+            localStorage.setItem('darkMode', document.documentElement.classList.contains('dark'));
+        }
+        
+        // Load saved dark mode preference
+        if (localStorage.getItem('darkMode') === 'true') {
+            document.documentElement.classList.add('dark');
+        }
+        
+        darkModeToggle.addEventListener('click', toggleDarkMode);
+        darkModeToggleMobile.addEventListener('click', toggleDarkMode);
+        
+        // Model Toggle
+        els.modelToggleBtn.addEventListener('click', () => {
+            if (currentModel === 'gemini-2.0-flash') {
+                currentModel = 'gemini-2.5-pro';
+                els.modelToggleBtn.innerHTML = '<svg class="w-4 h-4" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg" fill="#2c13e7"><path fill="#0e39e1" d="M257.375 20.313c-13.418 0-26.07 7.685-35.938 21.75-9.868 14.064-16.343 34.268-16.343 56.75 0 22.48 6.475 42.654 16.344 56.718 9.868 14.066 22.52 21.75 35.937 21.75 13.418 0 26.038-7.684 35.906-21.75 9.87-14.063 16.376-34.236 16.376-56.718 0-22.48-6.506-42.685-16.375-56.75-9.867-14.064-22.487-21.75-35.905-21.75zm-150.25 43.062c-20.305.574-23.996 13.892-31.78 29.03-23.298 45.304-55.564 164.75-55.564 164.75l160.47-5.436 29.125 137.593-22.78 106.03h149.093l-22.282-106 24.25-137.5 157.53 5.313c.002 0-32.264-119.447-55.56-164.75-7.787-15.14-11.477-28.457-31.782-29.03-17.898 0-32.406 15.552-32.406 34.718 0 19.166 14.508 34.72 32.406 34.72 3.728 0 7.258-.884 10.594-2.126l7.937 74.406L309.437 165c-.285.42-.552.867-.843 1.28-12.436 17.724-30.604 29.69-51.22 29.69-20.614 0-38.782-11.966-51.218-29.69-.277-.395-.54-.816-.812-1.218l-116.75 40.032 7.937-74.406c3.337 1.242 6.867 2.125 10.595 2.125 17.898 0 32.406-15.553 32.406-34.72 0-19.165-14.507-34.718-32.405-34.718z"></path></svg>';
+                els.modelToggleBtn.title = 'Powerful Mode';
+            } else {
+                currentModel = 'gemini-2.0-flash';
+                els.modelToggleBtn.innerHTML = '<svg class="w-4 h-4 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>';
+                els.modelToggleBtn.title = 'Fast Mode';
+            }
+        });
+    </script>
+</body>
+</html>
