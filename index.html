@@ -13,8 +13,6 @@
     
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- FontAwesome for specific icons used in tracker -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Tailwind Config -->
     <script>
@@ -154,7 +152,7 @@
                         <i data-lucide="sun" class="hidden dark:block"></i>
                     </button>
                     <button id="profile-btn-mobile" class="p-2.5 rounded-full bg-amber-100 dark:bg-amber-900 text-slate-600 dark:text-amber-300 active:scale-95 transition-transform">
-                        <i data-lucide="user"></i>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                     </button>
                 </div>
             </div>
@@ -169,7 +167,7 @@
                         <i data-lucide="sun" class="hidden dark:block"></i>
                     </button>
                     <button id="profile-btn" class="p-3 rounded-full hover:bg-amber-100 dark:hover:bg-amber-900 transition-colors text-slate-600 dark:text-amber-300">
-                        <i data-lucide="user"></i>
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
                     </button>
                 </div>
             </div>
@@ -257,12 +255,26 @@
                     <p id="auth-error" class="text-red-500 text-xs text-center hidden font-medium mt-2 bg-red-50 dark:bg-red-900/20 p-2 rounded-lg"></p>
                 </div>
 
-                <button id="logout-btn" class="hidden w-full flex items-center justify-between p-4 bg-red-50 dark:bg-red-950/20 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
-                    <div class="flex items-center gap-3">
-                        <i data-lucide="log-out" class="w-5 h-5 text-red-600 dark:text-red-400"></i>
-                        <span class="text-sm font-medium text-red-600 dark:text-red-400">Logout</span>
-                    </div>
-                </button>
+                <div id="logged-in-actions" class="hidden space-y-3">
+                    <button id="btn-sync-timeline" class="w-full flex items-center justify-between p-4 bg-amber-50 dark:bg-amber-900/10 rounded-xl hover:bg-amber-100 dark:hover:bg-amber-900/30 transition-colors border border-amber-100 dark:border-amber-900/20">
+                         <div class="flex items-center gap-3">
+                            <div class="p-1.5 bg-amber-100 dark:bg-amber-900/50 rounded-lg text-amber-600 dark:text-amber-400">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i>
+                            </div>
+                            <div class="text-left">
+                                <span class="block text-sm font-semibold text-slate-700 dark:text-amber-200">Sync Timeline</span>
+                                <span class="block text-[10px] text-slate-400 dark:text-amber-500/60">Restore start date from history</span>
+                            </div>
+                        </div>
+                    </button>
+
+                    <button id="logout-btn" class="w-full flex items-center justify-between p-4 bg-red-50 dark:bg-red-950/20 rounded-xl hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors">
+                        <div class="flex items-center gap-3">
+                            <i data-lucide="log-out" class="w-5 h-5 text-red-600 dark:text-red-400"></i>
+                            <span class="text-sm font-medium text-red-600 dark:text-red-400">Logout</span>
+                        </div>
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -311,6 +323,7 @@
         let initializeApp, getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, onAuthStateChanged, signInAnonymously;
         let getFirestore, doc, setDoc, onSnapshot, getDoc;
         let firebaseLoaded = false;
+        let initialCloudSyncComplete = false; // Guard for data overwrite
 
         // --- Configuration ---
         const firebaseConfig = {
@@ -395,7 +408,9 @@
 
         // --- State Management ---
         const localData = JSON.parse(localStorage.getItem('caffine_data') || '{}');
-        const todayStr = new Date().toISOString().split('T')[0];
+        // Offset for local date
+        const offset = new Date().getTimezoneOffset() * 60000;
+        const todayStr = (new Date(Date.now() - offset)).toISOString().split('T')[0];
 
         window.state = {
             user: null,
@@ -406,6 +421,34 @@
         };
 
         let popupState = { isOpen: false, date: null, hours: 0, isLocked: true };
+
+        // --- Repair Logic (New Feature) ---
+        window.repairTimeline = function() {
+            const dates = Object.keys(window.state.history).sort();
+            if (dates.length === 0) {
+                 alert("No history found to sync from.");
+                 return;
+            }
+
+            const earliestHistory = dates[0];
+            const currentStart = window.state.startDateStr;
+            let updated = false;
+
+            // If the earliest data point is BEFORE the current start date, move start date back.
+            if (earliestHistory < currentStart) {
+                console.log(`Repairing timeline: Moving start from ${currentStart} to ${earliestHistory}`);
+                window.state.startDateStr = earliestHistory;
+                updated = true;
+            }
+
+            if (updated) {
+                window.saveData();
+                renderAll();
+                alert(`Timeline synced! Start date restored to ${earliestHistory}.`);
+            } else {
+                alert("Timeline is already in sync with your history.");
+            }
+        };
 
         // --- Core Sync Logic ---
         window.saveData = async () => {
@@ -419,6 +462,13 @@
             
             // 2. Try Cloud Sync if possible
             if (firebaseLoaded && navigator.onLine && window.state.user) {
+                // CRITICAL FIX: Do NOT overwrite cloud data if we haven't finished the initial sync
+                // This prevents a new device (initialized with Today) from overwriting an existing account's start date
+                if (!initialCloudSyncComplete) {
+                    console.log("Skipping cloud save: Initial sync not complete");
+                    return;
+                }
+
                 updateUserStatus('syncing');
                 try {
                     await setDoc(doc(db, 'artifacts', appId, 'users', window.state.user.uid, 'data', 'main'), {
@@ -450,13 +500,13 @@
             onAuthStateChanged(auth, async (user) => {
                 window.state.user = user;
                 const authForm = document.getElementById('auth-form');
-                const logoutBtn = document.getElementById('logout-btn');
+                const loggedInActions = document.getElementById('logged-in-actions');
                 const userEmail = document.getElementById('user-email');
 
                 if (user) {
                     userEmail.textContent = user.isAnonymous ? "Guest (Synced)" : user.email;
                     authForm.classList.add('hidden');
-                    logoutBtn.classList.remove('hidden');
+                    loggedInActions.classList.remove('hidden');
 
                     // Cloud Sync Strategy
                     if (navigator.onLine) {
@@ -470,9 +520,29 @@
                                 const cloudData = snap.data();
                                 // Merge cloud data into local
                                 window.state.history = { ...window.state.history, ...cloudData.history };
-                                if (!window.state.startDateStr) window.state.startDateStr = cloudData.startDateStr;
+                                
+                                // FORCE SYNC START DATE
+                                if (cloudData.startDateStr) {
+                                    window.state.startDateStr = cloudData.startDateStr;
+                                } 
+                                
+                                // AUTOMATIC REPAIR on LOGIN
+                                // Check if history has dates older than the start date and fix immediately
+                                const historyDates = Object.keys(window.state.history).sort();
+                                if (historyDates.length > 0 && historyDates[0] < window.state.startDateStr) {
+                                    console.log(`Auto-repairing start date from ${window.state.startDateStr} to ${historyDates[0]}`);
+                                    window.state.startDateStr = historyDates[0];
+                                }
+                                
+                                if (cloudData.duration) window.state.duration = cloudData.duration;
+                                if (cloudData.darkMode !== undefined) window.state.darkMode = cloudData.darkMode;
+                                
+                                // Mark sync as complete BEFORE saving
+                                initialCloudSyncComplete = true;
                                 window.saveData(); 
                             } else {
+                                // New User in Cloud
+                                initialCloudSyncComplete = true;
                                 window.saveData(); // Push local to cloud
                             }
 
@@ -484,25 +554,37 @@
                                 // Only overwrite local if we aren't dirty (pending save)
                                 if (!needsSync) {
                                     window.state.history = { ...window.state.history, ...cloudData.history };
+                                    
+                                    // Live update start date
+                                    if (cloudData.startDateStr) {
+                                        window.state.startDateStr = cloudData.startDateStr;
+                                    }
+                                    if (cloudData.duration) window.state.duration = cloudData.duration;
+                                    
                                     renderAll();
                                 }
                             });
                         } catch(e) {
                             console.log("Error fetching cloud data", e);
                             updateUserStatus('offline');
+                            // If fetch failed, we allow local edits to proceed but stay in 'offline' state
+                            initialCloudSyncComplete = true; 
                         }
+                    } else {
+                        initialCloudSyncComplete = true; 
                     }
-                    
+
                     // Setup tracker sync
                     setupTrackerSync(user.uid);
 
                 } else {
                     userEmail.textContent = "Guest / Offline";
                     authForm.classList.remove('hidden');
-                    logoutBtn.classList.add('hidden');
+                    loggedInActions.classList.add('hidden');
                     updateUserStatus('offline');
-                    updateTrackerStatus('offline');
+                    initialCloudSyncComplete = false;
                     
+                    updateTrackerStatus('offline');
                     // Clean up tracker listener
                     if (trackerSyncListener) {
                         trackerSyncListener();
@@ -535,8 +617,6 @@
                     // Re-establish tracker sync if not already active
                     setupTrackerSync(window.state.user.uid);
                 }
-            } else if (!firebaseLoaded) {
-                console.log("Network back, but Firebase module was not loaded. Reload page to sync.");
             }
         });
 
@@ -600,12 +680,15 @@
         }
 
         function calculateStreaks() {
-            const todayStr = new Date().toISOString().split('T')[0];
+            const offset = new Date().getTimezoneOffset() * 60000;
+            const todayStr = (new Date(Date.now() - offset)).toISOString().split('T')[0];
             let checkDate = new Date();
+            
             // If today is 0, check yesterday to allow streak to hold
             if ((window.state.history[todayStr] || 0) === 0) {
                 checkDate.setDate(checkDate.getDate() - 1);
             }
+            
             const runCheck = (threshold) => {
                 let count = 0;
                 let d = new Date(checkDate);
@@ -687,7 +770,8 @@
                  const offset = date.getTimezoneOffset() * 60000;
                  return (new Date(date.getTime() - offset)).toISOString().split('T')[0];
             };
-            const todayIso = getLocalDS(today);
+            const offset = today.getTimezoneOffset() * 60000;
+            const todayIso = (new Date(today.getTime() - offset)).toISOString().split('T')[0];
 
             for(let i=0; i<window.state.duration; i++) {
                 const date = new Date(start);
@@ -754,10 +838,9 @@
 
         // --- Popup Logic ---
         function openPopup(date, hours) {
-            const today = new Date();
-             const offset = today.getTimezoneOffset() * 60000;
-             const todayIso = (new Date(today.getTime() - offset)).toISOString().split('T')[0];
-             const dateIso = (new Date(date.getTime() - offset)).toISOString().split('T')[0];
+            const offset = new Date().getTimezoneOffset() * 60000;
+            const todayIso = (new Date(Date.now() - offset)).toISOString().split('T')[0];
+            const dateIso = (new Date(date.getTime() - offset)).toISOString().split('T')[0];
 
             popupState = {
                 isOpen: true,
@@ -885,6 +968,10 @@
                  data.errorEl.textContent = "Sign Up Failed: " + e.message.replace('Firebase: ', '');
                  data.errorEl.classList.remove('hidden');
              }
+        };
+
+        document.getElementById('btn-sync-timeline').onclick = () => {
+             if(window.repairTimeline) window.repairTimeline();
         };
 
         document.getElementById('logout-btn').onclick = async () => {
@@ -1144,15 +1231,31 @@
         // Navigation Logic
         document.getElementById('nav-home').onclick = () => {
             document.getElementById('tracker-view').classList.add('hidden');
+            document.getElementById('planner-view').classList.add('hidden');
+            document.getElementById('app').classList.remove('hidden');
             document.getElementById('nav-home').className = "flex flex-col items-center py-2 px-4 text-amber-600 dark:text-amber-400";
             document.getElementById('nav-tracker').className = "flex flex-col items-center py-2 px-4 text-slate-400 dark:text-amber-800 hover:text-amber-600 dark:hover:text-amber-400 transition-colors";
+            document.getElementById('nav-planner').className = "flex flex-col items-center py-2 px-4 text-slate-400 dark:text-amber-800 hover:text-amber-600 dark:hover:text-amber-400 transition-colors";
         };
 
         document.getElementById('nav-tracker').onclick = () => {
             document.getElementById('tracker-view').classList.remove('hidden');
+            document.getElementById('planner-view').classList.add('hidden');
+            document.getElementById('app').classList.add('hidden');
             document.getElementById('nav-tracker').className = "flex flex-col items-center py-2 px-4 text-amber-600 dark:text-amber-400";
             document.getElementById('nav-home').className = "flex flex-col items-center py-2 px-4 text-slate-400 dark:text-amber-800 hover:text-amber-600 dark:hover:text-amber-400 transition-colors";
+            document.getElementById('nav-planner').className = "flex flex-col items-center py-2 px-4 text-slate-400 dark:text-amber-800 hover:text-amber-600 dark:hover:text-amber-400 transition-colors";
             initTracker();
+        };
+
+        document.getElementById('nav-planner').onclick = () => {
+            document.getElementById('planner-view').classList.remove('hidden');
+            document.getElementById('tracker-view').classList.add('hidden');
+            document.getElementById('app').classList.add('hidden');
+            document.getElementById('nav-planner').className = "flex flex-col items-center py-2 px-4 text-amber-600 dark:text-amber-400";
+            document.getElementById('nav-home').className = "flex flex-col items-center py-2 px-4 text-slate-400 dark:text-amber-800 hover:text-amber-600 dark:hover:text-amber-400 transition-colors";
+            document.getElementById('nav-tracker').className = "flex flex-col items-center py-2 px-4 text-slate-400 dark:text-amber-800 hover:text-amber-600 dark:hover:text-amber-400 transition-colors";
+            if (typeof lucide !== 'undefined') lucide.createIcons();
         };
 
     </script>
@@ -1167,6 +1270,10 @@
             <button id="nav-tracker" class="flex flex-col items-center py-2 px-4 text-slate-400 dark:text-amber-800 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
                 <i data-lucide="bar-chart-3" class="w-5 h-5 mb-1"></i>
                 <span class="text-xs font-medium">Tracker</span>
+            </button>
+            <button id="nav-planner" class="flex flex-col items-center py-2 px-4 text-slate-400 dark:text-amber-800 hover:text-amber-600 dark:hover:text-amber-400 transition-colors">
+                <i data-lucide="calendar-clock" class="w-5 h-5 mb-1"></i>
+                <span class="text-xs font-medium">Planner</span>
             </button>
         </div>
     </nav>
@@ -1194,8 +1301,8 @@
                         </div>
                     </div>
                     <button onclick="window.state.darkMode = !window.state.darkMode; window.saveData();" class="h-8 w-8 md:h-9 md:w-9 rounded-full bg-slate-100 dark:bg-white/5 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors flex items-center justify-center text-slate-500 dark:text-gray-400 focus:outline-none">
-                        <i class="fa-solid fa-moon dark:hidden text-xs"></i>
-                        <i class="fa-solid fa-sun hidden dark:block text-xs"></i>
+                        <svg class="w-4 h-4 dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                        <svg class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
                     </button>
                 </div>
                 
@@ -1216,7 +1323,7 @@
                 <div class="soft-card bg-white dark:bg-card p-5 md:p-6 rounded-2xl flex flex-col justify-between h-28 md:h-32 min-w-[85vw] sm:min-w-[45vw] md:min-w-0 snap-center">
                     <div class="flex justify-between items-start">
                         <p class="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-500">Tasks Done</p>
-                        <i class="fa-solid fa-check-circle text-emerald-500/80 text-lg"></i>
+                        <svg class="w-5 h-5 text-emerald-500/80" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>
                     </div>
                     <h3 class="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 dark:text-gray-100 mt-auto" id="tracker-total-tasks-done">0/0</h3>
                 </div>
@@ -1224,7 +1331,7 @@
                 <div class="soft-card bg-white dark:bg-card p-5 md:p-6 rounded-2xl flex flex-col justify-between h-28 md:h-32 min-w-[85vw] sm:min-w-[45vw] md:min-w-0 snap-center">
                     <div class="flex justify-between items-start">
                         <p class="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-500">Current Rank</p>
-                        <i class="fa-solid fa-medal text-amber-500/80 text-lg"></i>
+                        <svg class="w-5 h-5 text-amber-500/80" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                     </div>
                     <h3 class="text-2xl md:text-3xl font-semibold tracking-tight text-amber-500 mt-auto" id="tracker-user-rank">Robin</h3>
                 </div>
@@ -1232,7 +1339,7 @@
                 <div class="soft-card bg-white dark:bg-card p-5 md:p-6 rounded-2xl flex flex-col justify-between h-28 md:h-32 min-w-[85vw] sm:min-w-[45vw] md:min-w-0 snap-center">
                     <div class="flex justify-between items-start">
                         <p class="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-500">Focus Area</p>
-                        <i class="fa-solid fa-crosshairs text-rose-500/80 text-lg"></i>
+                        <svg class="w-5 h-5 text-rose-500/80" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/><circle cx="12" cy="12" r="3"/></svg>
                     </div>
                     <h3 class="text-xl md:text-2xl font-semibold tracking-tight text-slate-900 dark:text-gray-100 mt-auto truncate" id="tracker-focus-area">Balanced</h3>
                 </div>
@@ -1246,7 +1353,7 @@
                         <div class="flex justify-between items-end mb-3">
                             <div class="flex items-center gap-3">
                                 <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-white dark:bg-white/5 flex items-center justify-center text-amber-600 shadow-sm dark:shadow-none dark:border dark:border-white/5">
-                                    <i class="fa-solid fa-atom text-xs md:text-sm"></i>
+                                    <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/></svg>
                                 </div>
                                 <h2 class="text-base md:text-lg font-semibold tracking-tight text-slate-900 dark:text-gray-100">Physics</h2>
                             </div>
@@ -1265,7 +1372,7 @@
                         <div class="flex justify-between items-end mb-3">
                             <div class="flex items-center gap-3">
                                 <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-white dark:bg-white/5 flex items-center justify-center text-amber-600 shadow-sm dark:shadow-none dark:border dark:border-white/5">
-                                    <i class="fa-solid fa-flask text-xs md:text-sm"></i>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 7.172V5L8 4z"/></svg>
                                 </div>
                                 <h2 class="text-base md:text-lg font-semibold tracking-tight text-slate-900 dark:text-gray-100">Chemistry</h2>
                             </div>
@@ -1284,7 +1391,7 @@
                         <div class="flex justify-between items-end mb-3">
                             <div class="flex items-center gap-3">
                                 <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-white dark:bg-white/5 flex items-center justify-center text-amber-600 shadow-sm dark:shadow-none dark:border dark:border-white/5">
-                                    <i class="fa-solid fa-calculator text-xs md:text-sm"></i>
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
                                 </div>
                                 <h2 class="text-base md:text-lg font-semibold tracking-tight text-slate-900 dark:text-gray-100">Maths</h2>
                             </div>
@@ -1298,6 +1405,11 @@
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- Planner View (Hidden by default) -->
+    <div id="planner-view" class="hidden fixed inset-0 bg-amber-50 dark:bg-black z-30 overflow-hidden">
+        <iframe src="planner.html" class="w-full h-full border-0"></iframe>
     </div>
 </body>
 </html>
