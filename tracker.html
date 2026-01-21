@@ -165,9 +165,31 @@
     <!-- Main Content -->
     <main class="max-w-6xl mx-auto px-4 pt-28 md:px-6 md:pt-36">
         
-        <!-- Dashboard Stats (Horizontal Scroll on Mobile) -->
+        <!-- Class Selection -->
+        <div class="soft-card bg-white dark:bg-card p-4 md:p-6 rounded-2xl mb-6 md:mb-8">
+            <h3 class="text-sm md:text-base font-semibold text-slate-900 dark:text-gray-100 mb-4">Select Class & Stream</h3>
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <button onclick="switchSyllabus('class11pcm')" id="btn-class11pcm" class="syllabus-btn p-3 rounded-xl border-2 border-slate-200 dark:border-white/10 text-xs font-medium transition-all hover:border-amber-400 dark:hover:border-amber-400">
+                    <div class="text-slate-900 dark:text-gray-100">Class 11</div>
+                    <div class="text-slate-500 dark:text-gray-400 text-[10px]">PCM</div>
+                </button>
+                <button onclick="switchSyllabus('class11pcb')" id="btn-class11pcb" class="syllabus-btn p-3 rounded-xl border-2 border-slate-200 dark:border-white/10 text-xs font-medium transition-all hover:border-amber-400 dark:hover:border-amber-400">
+                    <div class="text-slate-900 dark:text-gray-100">Class 11</div>
+                    <div class="text-slate-500 dark:text-gray-400 text-[10px]">PCB</div>
+                </button>
+                <button onclick="switchSyllabus('class12pcm')" id="btn-class12pcm" class="syllabus-btn p-3 rounded-xl border-2 border-slate-200 dark:border-white/10 text-xs font-medium transition-all hover:border-amber-400 dark:hover:border-amber-400">
+                    <div class="text-slate-900 dark:text-gray-100">Class 12</div>
+                    <div class="text-slate-500 dark:text-gray-400 text-[10px]">PCM</div>
+                </button>
+                <button onclick="switchSyllabus('class12pcb')" id="btn-class12pcb" class="syllabus-btn p-3 rounded-xl border-2 border-slate-200 dark:border-white/10 text-xs font-medium transition-all hover:border-amber-400 dark:hover:border-amber-400">
+                    <div class="text-slate-900 dark:text-gray-100">Class 12</div>
+                    <div class="text-slate-500 dark:text-gray-400 text-[10px]">PCB</div>
+                </button>
+            </div>
+        </div>
+
+        <!-- Dashboard Stats -->
         <div class="flex md:grid md:grid-cols-3 overflow-x-auto snap-x snap-mandatory gap-4 mb-6 md:mb-10 pb-4 md:pb-0 hide-scrollbar -mx-4 px-4 md:mx-0 md:px-0">
-            <!-- Stat Card 1 -->
             <div class="soft-card bg-white dark:bg-card p-5 md:p-6 rounded-2xl flex flex-col justify-between h-28 md:h-32 min-w-[85vw] sm:min-w-[45vw] md:min-w-0 snap-center">
                 <div class="flex justify-between items-start">
                     <p class="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-500">Tasks Done</p>
@@ -176,7 +198,6 @@
                 <h3 class="text-2xl md:text-3xl font-semibold tracking-tight text-slate-900 dark:text-gray-100 mt-auto" id="total-tasks-done">0/0</h3>
             </div>
             
-            <!-- Stat Card 2 -->
             <div class="soft-card bg-white dark:bg-card p-5 md:p-6 rounded-2xl flex flex-col justify-between h-28 md:h-32 min-w-[85vw] sm:min-w-[45vw] md:min-w-0 snap-center">
                 <div class="flex justify-between items-start">
                     <p class="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-500">Current Rank</p>
@@ -185,7 +206,6 @@
                 <h3 class="text-2xl md:text-3xl font-semibold tracking-tight text-amber-500 mt-auto" id="user-rank">Novice</h3>
             </div>
 
-            <!-- Stat Card 3 -->
             <div class="soft-card bg-white dark:bg-card p-5 md:p-6 rounded-2xl flex flex-col justify-between h-28 md:h-32 min-w-[85vw] sm:min-w-[45vw] md:min-w-0 snap-center">
                 <div class="flex justify-between items-start">
                     <p class="text-[9px] md:text-[10px] font-bold uppercase tracking-widest text-slate-400 dark:text-gray-500">Focus Area</p>
@@ -240,23 +260,23 @@
                 </div>
             </div>
 
-            <!-- Maths Section -->
+            <!-- Third Subject Section -->
             <div class="soft-card bg-white dark:bg-card rounded-2xl overflow-hidden flex flex-col h-full">
                 <div class="px-5 py-4 md:px-6 md:py-6 border-b border-slate-50 dark:border-white/5 bg-math/5 dark:bg-math/10">
                     <div class="flex justify-between items-end mb-3">
                         <div class="flex items-center gap-3">
                             <div class="w-7 h-7 md:w-8 md:h-8 rounded-lg bg-white dark:bg-white/5 flex items-center justify-center text-math shadow-sm dark:shadow-none dark:border dark:border-white/5">
-                                <i class="fa-solid fa-calculator text-xs md:text-sm"></i>
+                                <i id="third-subject-icon" class="fa-solid fa-calculator text-xs md:text-sm"></i>
                             </div>
-                            <h2 class="text-base md:text-lg font-semibold tracking-tight text-slate-900 dark:text-gray-100">Maths</h2>
+                            <h2 id="third-subject-title" class="text-base md:text-lg font-semibold tracking-tight text-slate-900 dark:text-gray-100">Maths</h2>
                         </div>
-                        <span id="math-text" class="text-[10px] md:text-xs font-bold text-math font-mono">0%</span>
+                        <span id="third-subject-text" class="text-[10px] md:text-xs font-bold text-math font-mono">0%</span>
                     </div>
                     <div class="w-full bg-slate-200/50 dark:bg-white/10 rounded-full h-1">
-                        <div id="math-bar" class="bg-math h-1 rounded-full progress-transition glow-bar-math" style="width: 0%"></div>
+                        <div id="third-subject-bar" class="bg-math h-1 rounded-full progress-transition glow-bar-math" style="width: 0%"></div>
                     </div>
                 </div>
-                <div id="math-list" class="p-3 md:p-4 space-y-2 flex-grow">
+                <div id="third-subject-list" class="p-3 md:p-4 space-y-2 flex-grow">
                     <!-- Javascript will populate this -->
                 </div>
             </div>
@@ -331,9 +351,15 @@
             unsubscribe = onSnapshot(docRef, (docSnapshot) => {
                 if (docSnapshot.exists()) {
                     const cloudData = docSnapshot.data();
-                    if (JSON.stringify(cloudData) !== JSON.stringify(window.appData)) {
-                        window.appData = cloudData;
-                        saveDataLocal(); 
+                    // Sync all syllabus data
+                    Object.keys(cloudData).forEach(syllabusKey => {
+                        if (cloudData[syllabusKey]) {
+                            localStorage.setItem(`syllabusTrackerData_${syllabusKey}`, JSON.stringify(cloudData[syllabusKey]));
+                        }
+                    });
+                    // Update current syllabus data
+                    if (cloudData[currentSyllabus]) {
+                        window.appData = cloudData[currentSyllabus];
                         init();
                     }
                     setStatus('synced');
@@ -347,14 +373,21 @@
         }
 
         window.saveToCloud = async function() {
-            saveDataLocal();
             if (!currentUser) {
                 setStatus('offline');
                 return;
             }
             setStatus('syncing');
             try {
-                await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'data', 'syllabus'), window.appData);
+                // Collect all syllabus data from localStorage
+                const allSyllabusData = {};
+                ['class11pcm', 'class11pcb', 'class12pcm', 'class12pcb'].forEach(syllabusKey => {
+                    const data = localStorage.getItem(`syllabusTrackerData_${syllabusKey}`);
+                    if (data) {
+                        allSyllabusData[syllabusKey] = JSON.parse(data);
+                    }
+                });
+                await setDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'data', 'syllabus'), allSyllabusData);
                 setStatus('synced');
             } catch (e) {
                 console.error("Save Error", e);
@@ -364,40 +397,223 @@
     </script>
 
     <script>
-        // --- Core Application Logic ---
-
-        const defaultData = {
-            physics: [
-                { name: "Units and Dimensions", theory: false, questions: false },
-                { name: "Vectors", theory: false, questions: false },
-                { name: "Kinematics", theory: false, questions: false },
-                { name: "Newton’s Laws of Motion", theory: false, questions: false },
-                { name: "Friction", theory: false, questions: false },
-                { name: "Work, Energy and Power", theory: false, questions: false },
-                { name: "Centre of Mass", theory: false, questions: false },
-                { name: "Rotation – MOI & Torque", theory: false, questions: false }
-            ],
-            chemistry: [
-                { name: "Mole Concept", desc: "Basic calculation", theory: false, questions: false },
-                { name: "Atomic Structure", desc: "Basics", theory: false, questions: false },
-                { name: "States of Matter", desc: "Ideal Gas Eq", theory: false, questions: false },
-                { name: "Periodic Table & Bonding", desc: "Must for Organic", theory: false, questions: false },
-                { name: "Thermodynamics", desc: "Gibbs Free Energy", theory: false, questions: false },
-                { name: "Ionic Equilibrium", desc: "pH & Solubility", theory: false, questions: false },
-                { name: "Redox Reactions", desc: "Balancing", theory: false, questions: false }
-            ],
-            math: [
-                { name: "Basic Logarithms", theory: false, questions: false },
-                { name: "Quadratic Equations", theory: false, questions: false },
-                { name: "Trigonometry", theory: false, questions: false },
-                { name: "Permutations & Combinations", desc: "Probability Basis", theory: false, questions: false },
-                { name: "Coordinate Geometry", desc: "Line & Circle", theory: false, questions: false }
-            ]
+        const syllabusData = {
+            class11pcm: {
+                physics: [
+                    { name: "Physical World and Measurement", theory: false, questions: false },
+                    { name: "Kinematics", theory: false, questions: false },
+                    { name: "Laws of Motion", theory: false, questions: false },
+                    { name: "Work, Energy and Power", theory: false, questions: false },
+                    { name: "Motion of System of Particles and Rigid Body", theory: false, questions: false },
+                    { name: "Gravitation", theory: false, questions: false },
+                    { name: "Properties of Bulk Matter", theory: false, questions: false },
+                    { name: "Thermodynamics", theory: false, questions: false },
+                    { name: "Behaviour of Perfect Gas and Kinetic Theory", theory: false, questions: false },
+                    { name: "Oscillations and Waves", theory: false, questions: false }
+                ],
+                chemistry: [
+                    { name: "Some Basic Concepts of Chemistry", theory: false, questions: false },
+                    { name: "Structure of Atom", theory: false, questions: false },
+                    { name: "States of Matter", theory: false, questions: false },
+                    { name: "Thermodynamics", theory: false, questions: false },
+                    { name: "Equilibrium", theory: false, questions: false },
+                    { name: "Classification of Elements and Periodicity", theory: false, questions: false },
+                    { name: "Chemical Bonding and Molecular Structure", theory: false, questions: false },
+                    { name: "Redox Reactions", theory: false, questions: false },
+                    { name: "Hydrogen", theory: false, questions: false },
+                    { name: "s-Block Elements", theory: false, questions: false },
+                    { name: "Some p-Block Elements", theory: false, questions: false },
+                    { name: "Organic Chemistry - Basic Principles", theory: false, questions: false },
+                    { name: "Purification and Characterisation of Organic Compounds", theory: false, questions: false },
+                    { name: "Hydrocarbons", theory: false, questions: false },
+                    { name: "Environmental Chemistry", theory: false, questions: false }
+                ],
+                math: [
+                    { name: "Sets", theory: false, questions: false },
+                    { name: "Relations and Functions", theory: false, questions: false },
+                    { name: "Trigonometric Functions", theory: false, questions: false },
+                    { name: "Principle of Mathematical Induction", theory: false, questions: false },
+                    { name: "Complex Numbers and Quadratic Equations", theory: false, questions: false },
+                    { name: "Linear Inequalities", theory: false, questions: false },
+                    { name: "Permutations and Combinations", theory: false, questions: false },
+                    { name: "Binomial Theorem", theory: false, questions: false },
+                    { name: "Sequences and Series", theory: false, questions: false },
+                    { name: "Straight Lines", theory: false, questions: false },
+                    { name: "Conic Sections", theory: false, questions: false },
+                    { name: "Introduction to Three Dimensional Geometry", theory: false, questions: false },
+                    { name: "Limits and Derivatives", theory: false, questions: false },
+                    { name: "Mathematical Reasoning", theory: false, questions: false },
+                    { name: "Statistics", theory: false, questions: false },
+                    { name: "Probability", theory: false, questions: false }
+                ]
+            },
+            class11pcb: {
+                physics: [
+                    { name: "Physical World and Measurement", theory: false, questions: false },
+                    { name: "Kinematics", theory: false, questions: false },
+                    { name: "Laws of Motion", theory: false, questions: false },
+                    { name: "Work, Energy and Power", theory: false, questions: false },
+                    { name: "Motion of System of Particles and Rigid Body", theory: false, questions: false },
+                    { name: "Gravitation", theory: false, questions: false },
+                    { name: "Properties of Bulk Matter", theory: false, questions: false },
+                    { name: "Thermodynamics", theory: false, questions: false },
+                    { name: "Behaviour of Perfect Gas and Kinetic Theory", theory: false, questions: false },
+                    { name: "Oscillations and Waves", theory: false, questions: false }
+                ],
+                chemistry: [
+                    { name: "Some Basic Concepts of Chemistry", theory: false, questions: false },
+                    { name: "Structure of Atom", theory: false, questions: false },
+                    { name: "States of Matter", theory: false, questions: false },
+                    { name: "Thermodynamics", theory: false, questions: false },
+                    { name: "Equilibrium", theory: false, questions: false },
+                    { name: "Classification of Elements and Periodicity", theory: false, questions: false },
+                    { name: "Chemical Bonding and Molecular Structure", theory: false, questions: false },
+                    { name: "Redox Reactions", theory: false, questions: false },
+                    { name: "Hydrogen", theory: false, questions: false },
+                    { name: "s-Block Elements", theory: false, questions: false },
+                    { name: "Some p-Block Elements", theory: false, questions: false },
+                    { name: "Organic Chemistry - Basic Principles", theory: false, questions: false },
+                    { name: "Purification and Characterisation of Organic Compounds", theory: false, questions: false },
+                    { name: "Hydrocarbons", theory: false, questions: false },
+                    { name: "Environmental Chemistry", theory: false, questions: false }
+                ],
+                biology: [
+                    { name: "Diversity in Living World", theory: false, questions: false },
+                    { name: "Structural Organisation in Plants", theory: false, questions: false },
+                    { name: "Cell Structure and Function", theory: false, questions: false },
+                    { name: "Plant Physiology", theory: false, questions: false },
+                    { name: "Plant Kingdom", theory: false, questions: false },
+                    { name: "Structural Organisation in Animals", theory: false, questions: false },
+                    { name: "Human Physiology", theory: false, questions: false },
+                    { name: "Animal Kingdom", theory: false, questions: false }
+                ]
+            },
+            class12pcm: {
+                physics: [
+                    { name: "Electrostatics", theory: false, questions: false },
+                    { name: "Current Electricity", theory: false, questions: false },
+                    { name: "Magnetic Effects of Current and Magnetism", theory: false, questions: false },
+                    { name: "Electromagnetic Induction", theory: false, questions: false },
+                    { name: "Alternating Currents", theory: false, questions: false },
+                    { name: "Electromagnetic Waves", theory: false, questions: false },
+                    { name: "Ray Optics and Optical Instruments", theory: false, questions: false },
+                    { name: "Wave Optics", theory: false, questions: false },
+                    { name: "Dual Nature of Radiation and Matter", theory: false, questions: false },
+                    { name: "Atoms", theory: false, questions: false },
+                    { name: "Nuclei", theory: false, questions: false },
+                    { name: "Semiconductor Electronics", theory: false, questions: false }
+                ],
+                chemistry: [
+                    { name: "Solutions", theory: false, questions: false },
+                    { name: "Electrochemistry", theory: false, questions: false },
+                    { name: "Chemical Kinetics", theory: false, questions: false },
+                    { name: "Surface Chemistry", theory: false, questions: false },
+                    { name: "General Principles and Processes of Isolation of Elements", theory: false, questions: false },
+                    { name: "p-Block Elements", theory: false, questions: false },
+                    { name: "d- and f-Block Elements", theory: false, questions: false },
+                    { name: "Coordination Compounds", theory: false, questions: false },
+                    { name: "Haloalkanes and Haloarenes", theory: false, questions: false },
+                    { name: "Alcohols, Phenols and Ethers", theory: false, questions: false },
+                    { name: "Aldehydes, Ketones and Carboxylic Acids", theory: false, questions: false },
+                    { name: "Amines", theory: false, questions: false },
+                    { name: "Biomolecules", theory: false, questions: false },
+                    { name: "Polymers", theory: false, questions: false },
+                    { name: "Chemistry in Everyday Life", theory: false, questions: false }
+                ],
+                math: [
+                    { name: "Relations and Functions", theory: false, questions: false },
+                    { name: "Inverse Trigonometric Functions", theory: false, questions: false },
+                    { name: "Matrices", theory: false, questions: false },
+                    { name: "Determinants", theory: false, questions: false },
+                    { name: "Continuity and Differentiability", theory: false, questions: false },
+                    { name: "Applications of Derivatives", theory: false, questions: false },
+                    { name: "Integrals", theory: false, questions: false },
+                    { name: "Applications of Integrals", theory: false, questions: false },
+                    { name: "Differential Equations", theory: false, questions: false },
+                    { name: "Vector Algebra", theory: false, questions: false },
+                    { name: "Three Dimensional Geometry", theory: false, questions: false },
+                    { name: "Linear Programming", theory: false, questions: false },
+                    { name: "Probability", theory: false, questions: false }
+                ]
+            },
+            class12pcb: {
+                physics: [
+                    { name: "Electrostatics", theory: false, questions: false },
+                    { name: "Current Electricity", theory: false, questions: false },
+                    { name: "Magnetic Effects of Current and Magnetism", theory: false, questions: false },
+                    { name: "Electromagnetic Induction and Alternating Currents", theory: false, questions: false },
+                    { name: "Electromagnetic Waves", theory: false, questions: false },
+                    { name: "Optics", theory: false, questions: false },
+                    { name: "Dual Nature of Matter and Radiation", theory: false, questions: false },
+                    { name: "Atoms and Nuclei", theory: false, questions: false },
+                    { name: "Electronic Devices", theory: false, questions: false }
+                ],
+                chemistry: [
+                    { name: "Solutions", theory: false, questions: false },
+                    { name: "Electrochemistry", theory: false, questions: false },
+                    { name: "Chemical Kinetics", theory: false, questions: false },
+                    { name: "Surface Chemistry", theory: false, questions: false },
+                    { name: "General Principles and Processes of Isolation of Elements", theory: false, questions: false },
+                    { name: "The p-Block Elements", theory: false, questions: false },
+                    { name: "The d and f-Block Elements", theory: false, questions: false },
+                    { name: "Coordination Compounds", theory: false, questions: false },
+                    { name: "Haloalkanes and Haloarenes", theory: false, questions: false },
+                    { name: "Alcohols, Phenols and Ethers", theory: false, questions: false },
+                    { name: "Aldehydes, Ketones and Carboxylic Acids", theory: false, questions: false },
+                    { name: "Amines", theory: false, questions: false },
+                    { name: "Biomolecules", theory: false, questions: false }
+                ],
+                biology: [
+                    { name: "Reproduction in Organisms", theory: false, questions: false },
+                    { name: "Sexual Reproduction in Flowering Plants", theory: false, questions: false },
+                    { name: "Principles of Inheritance and Variation", theory: false, questions: false },
+                    { name: "Molecular Basis of Inheritance", theory: false, questions: false },
+                    { name: "Biology and Human Welfare", theory: false, questions: false },
+                    { name: "Biotechnology and its Applications", theory: false, questions: false },
+                    { name: "Ecosystem", theory: false, questions: false },
+                    { name: "Human Reproduction", theory: false, questions: false },
+                    { name: "Reproductive Health", theory: false, questions: false },
+                    { name: "Evolution", theory: false, questions: false },
+                    { name: "Human Health and Disease", theory: false, questions: false },
+                    { name: "Biotechnology: Principles and Processes", theory: false, questions: false },
+                    { name: "Organisms and Populations", theory: false, questions: false }
+                ]
+            }
         };
 
-        window.appData = JSON.parse(localStorage.getItem('syllabusTrackerData')) || JSON.parse(JSON.stringify(defaultData));
+        let currentSyllabus = localStorage.getItem('currentSyllabus') || 'class11pcm';
+        window.appData = JSON.parse(localStorage.getItem(`syllabusTrackerData_${currentSyllabus}`)) || JSON.parse(JSON.stringify(syllabusData[currentSyllabus]));
 
-        // Initialize Theme
+        window.switchSyllabus = function(syllabusType) {
+            localStorage.setItem(`syllabusTrackerData_${currentSyllabus}`, JSON.stringify(window.appData));
+            currentSyllabus = syllabusType;
+            localStorage.setItem('currentSyllabus', currentSyllabus);
+            window.appData = JSON.parse(localStorage.getItem(`syllabusTrackerData_${currentSyllabus}`)) || JSON.parse(JSON.stringify(syllabusData[currentSyllabus]));
+            updateSyllabusButtons();
+            updateSubjectLabels();
+            init();
+        }
+
+        function updateSyllabusButtons() {
+            document.querySelectorAll('.syllabus-btn').forEach(btn => {
+                btn.classList.remove('border-amber-400', 'bg-amber-50', 'dark:bg-amber-900/20');
+                btn.classList.add('border-slate-200', 'dark:border-white/10');
+            });
+            const activeBtn = document.getElementById(`btn-${currentSyllabus}`);
+            if (activeBtn) {
+                activeBtn.classList.remove('border-slate-200', 'dark:border-white/10');
+                activeBtn.classList.add('border-amber-400', 'bg-amber-50', 'dark:bg-amber-900/20');
+            }
+        }
+
+        function updateSubjectLabels() {
+            const thirdSubject = currentSyllabus.includes('pcb') ? 'biology' : 'math';
+            const thirdSubjectTitle = thirdSubject === 'biology' ? 'Biology' : 'Maths';
+            const thirdSubjectIcon = thirdSubject === 'biology' ? 'fa-dna' : 'fa-calculator';
+            document.getElementById('third-subject-title').textContent = thirdSubjectTitle;
+            document.getElementById('third-subject-icon').className = `fa-solid ${thirdSubjectIcon} text-xs md:text-sm`;
+        }
+
         if (localStorage.getItem('theme') === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -416,12 +632,10 @@
         function renderList(subject, listId, colorClass) {
             const container = document.getElementById(listId);
             container.innerHTML = '';
-
+            if (!window.appData[subject]) return;
             window.appData[subject].forEach((chapter, index) => {
                 const isDone = chapter.theory && chapter.questions;
-                
                 const item = document.createElement('div');
-                // Mobile-first friendly: flex-row always, shrink checkboxes if needed, truncate text
                 item.className = `p-3 rounded-xl transition-all duration-200 hover:bg-slate-50 dark:hover:bg-white/5 flex flex-row items-center justify-between gap-3 group`;
                 
                 const html = `
@@ -431,7 +645,6 @@
                     </div>
                     
                     <div class="flex items-center gap-2 md:gap-3 shrink-0">
-                        <!-- Theory Checkbox -->
                         <label class="checkbox-wrapper cursor-pointer flex items-center gap-1.5 md:gap-2 group/check p-1">
                             <span class="text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-slate-300 dark:text-gray-600 group-hover/check:text-${colorClass} transition-colors">Theory</span>
                             <div class="relative w-4 h-4 md:w-5 md:h-5">
@@ -444,7 +657,6 @@
                             </div>
                         </label>
 
-                        <!-- Questions Checkbox -->
                         <label class="checkbox-wrapper cursor-pointer flex items-center gap-1.5 md:gap-2 group/check p-1">
                              <span class="text-[8px] md:text-[9px] font-bold uppercase tracking-widest text-slate-300 dark:text-gray-600 group-hover/check:text-${colorClass} transition-colors">Prob</span>
                             <div class="relative w-4 h-4 md:w-5 md:h-5">
@@ -469,23 +681,23 @@
             if (window.saveToCloud) window.saveToCloud();
             calculateStats();
             
-            // Re-render specifically
-            const colorMap = { physics: 'physics', chemistry: 'chemistry', math: 'math' };
-            renderList(subject, `${subject}-list`, colorMap[subject]);
+            const colorMap = { physics: 'physics', chemistry: 'chemistry', math: 'math', biology: 'math' };
+            renderList(subject, `${subject === 'math' || subject === 'biology' ? 'third-subject' : subject}-list`, colorMap[subject]);
         }
 
         window.saveDataLocal = function() {
-            localStorage.setItem('syllabusTrackerData', JSON.stringify(window.appData));
+            localStorage.setItem(`syllabusTrackerData_${currentSyllabus}`, JSON.stringify(window.appData));
         }
 
         window.calculateStats = function() {
             let totalTasks = 0;
             let completedTasks = 0;
-            
-            const subjects = ['physics', 'chemistry', 'math'];
+            const thirdSubject = currentSyllabus.includes('pcb') ? 'biology' : 'math';
+            const subjects = ['physics', 'chemistry', thirdSubject];
             const stats = {};
 
             subjects.forEach(sub => {
+                if (!window.appData[sub]) return;
                 let subTotal = window.appData[sub].length * 2;
                 let subDone = 0;
                 
@@ -499,8 +711,10 @@
                 totalTasks += subTotal;
                 completedTasks += subDone;
 
-                document.getElementById(`${sub}-bar`).style.width = `${stats[sub].percent}%`;
-                document.getElementById(`${sub}-text`).innerText = `${stats[sub].percent}%`;
+                const barId = sub === 'math' || sub === 'biology' ? 'third-subject-bar' : `${sub}-bar`;
+                const textId = sub === 'math' || sub === 'biology' ? 'third-subject-text' : `${sub}-text`;
+                document.getElementById(barId).style.width = `${stats[sub].percent}%`;
+                document.getElementById(textId).innerText = `${stats[sub].percent}%`;
             });
 
             const globalPercent = totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100);
@@ -508,7 +722,6 @@
             document.getElementById('global-percentage').innerText = `${globalPercent}%`;
             document.getElementById('total-tasks-done').innerText = `${completedTasks}/${totalTasks}`;
 
-            // Rank Logic
             const rankEl = document.getElementById('user-rank');
             if(globalPercent === 0) rankEl.innerText = "Robin";
             else if(globalPercent < 25) rankEl.innerText = "Nightwing";
@@ -523,7 +736,6 @@
                 }
             }
 
-            // Focus Logic
             let minPercent = 100;
             let lagSubject = "Balanced";
             subjects.forEach(sub => {
@@ -533,7 +745,7 @@
                 }
             });
             
-            if(stats.physics.percent === stats.chemistry.percent && stats.chemistry.percent === stats.math.percent && stats.math.percent > 0) {
+            if(stats.physics.percent === stats.chemistry.percent && stats.chemistry.percent === stats[thirdSubject].percent && stats[thirdSubject].percent > 0) {
                 lagSubject = "Consistent";
             }
             if(globalPercent === 100) lagSubject = "Gotham Protected";
@@ -558,12 +770,15 @@
         }
 
         window.init = function() {
+            const thirdSubject = currentSyllabus.includes('pcb') ? 'biology' : 'math';
             renderList('physics', 'physics-list', 'physics');
             renderList('chemistry', 'chemistry-list', 'chemistry');
-            renderList('math', 'math-list', 'math');
+            renderList(thirdSubject, 'third-subject-list', 'math');
             calculateStats();
         }
 
+        updateSyllabusButtons();
+        updateSubjectLabels();
         init();
     </script>
 </body>
